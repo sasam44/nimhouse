@@ -191,7 +191,20 @@ Object.defineProperty(kDown, 'clientY', { value: 400 })
 view.dispatchEvent(kDown)
 const kUp = new window.Event('pointerup', { bubbles: true })
 window.dispatchEvent(kUp)
-await sleep(14000) // level 1 descent completes untouched — still alive
+// a few real throws during level 1 (within the 1.5s grace → they must stick
+// safely; any runtime error here would have broken the run)
+const failsBefore = failures
+await sleep(650)
+for (let i = 0; i < 3; i++) {
+  const td = new window.Event('pointerdown', { bubbles: true })
+  Object.defineProperty(td, 'clientX', { value: 180 })
+  Object.defineProperty(td, 'clientY', { value: 500 })
+  view.dispatchEvent(td)
+  window.dispatchEvent(new window.Event('pointerup', { bubbles: true }))
+  await sleep(420)
+}
+check('knife throws run without runtime errors', failures === failsBefore)
+await sleep(14000) // level 1 descent completes — still alive
 over = document.body.textContent.includes('Play again')
 check('NimKnife still alive after level 1 (chick reached the bottom)', !over)
 await sleep(16000) // block storm drains 3 hearts

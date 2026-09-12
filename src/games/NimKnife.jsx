@@ -75,18 +75,25 @@ function drawKnife(ctx, x, y, side, rot = 0) {
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(rot)
-  const dir = side // 1 = pointing left, -1 = pointing right
-  // blade
-  ctx.fillStyle = '#cdd5de'
+  const dir = side // 1 = blade points right, -1 = blade points left
+  // blade (steel, with a darker spine for contrast on the tower)
+  ctx.fillStyle = '#e8eef4'
   ctx.beginPath()
-  ctx.moveTo(dir * 20, 0)
-  ctx.lineTo(dir * 4, -4)
-  ctx.lineTo(dir * 4, 4)
+  ctx.moveTo(dir * 27, 0)
+  ctx.lineTo(dir * 5, -5.5)
+  ctx.lineTo(dir * 5, 5.5)
   ctx.closePath()
   ctx.fill()
+  ctx.strokeStyle = 'rgba(40,55,75,0.55)'
+  ctx.lineWidth = 1.2
+  ctx.stroke()
+  ctx.fillStyle = 'rgba(120,140,165,0.9)'
+  ctx.fillRect(dir > 0 ? 5 : -27, -1, 22, 1.6)
   // handle
   ctx.fillStyle = '#8b4513'
-  ctx.fillRect(dir * 4 - (dir > 0 ? 10 : 0), -2.5, 10, 5)
+  ctx.fillRect(dir * 5 - (dir > 0 ? 12 : 0), -3, 12, 6)
+  ctx.fillStyle = 'rgba(255,255,255,0.25)'
+  ctx.fillRect(dir * 5 - (dir > 0 ? 12 : 0), -3, 12, 2)
   ctx.restore()
 }
 
@@ -149,7 +156,10 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
       // fx
       popups: [],
       parts: [],
+      flights: [], // knives in flight (climb)
+      rays: [], // throw flash lines (smash)
       flashT: 0,
+      levelT: 0,
       holding: false,
       holdT: 0,
       thrown: 0,
@@ -175,6 +185,9 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
       const p = levelParams(level)
       st.mode = p.mode
       st.flashT = 90
+      st.levelT = 0
+      st.flights = []
+      st.rays = []
       if (p.mode === 'climb') {
         st.chickY = CHICK_START_Y
         st.knives = []
@@ -253,40 +266,53 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
       st.phase = 'play'
     }
 
+    // a knife lands after a short flight — the hit is judged at landing time
+    function landClimbKnife(i) {
+      if (st.phase !== 'play') return
+      const pL = levelParams(st.level)
+      const slot = SLOTS[i]
+      const side = slot.x >= TOWER_CX ? -1 : 1
+      // blade spans slot.x → toward the tower center (27px); chick body ~22px
+      const chickX = TOWER_CX + Math.sin(st.t * pL.swayW) * pL.swayA
+      const zone0 = side === -1 ? slot.x - 27 : slot.x - 4
+      const zone1 = side === -1 ? slot.x + 4 : slot.x + 27
+      const hit =
+        st.levelT > 90 && // 1.5s grace at the start of each level
+        Math.abs(st.chickY - slot.y) < 16 &&
+        chickX + 11 > zone0 &&
+        chickX - 11 < zone1
+      if (hit) {
+        st.knocked.push({ x: slot.x, y: slot.y, vy: -1.6, rot: 0, life: 55 })
+        loseLife(chickX, st.chickY - 14)
+        return
+      }
+      st.knives.push({ y: slot.y, side, x: slot.x })
+      if (st.knives.length >= MAX_KNIVES) {
+        levelClear()
+        return
+      }
+      st.score += 25
+      st.popups.push({ x: slot.x + side * 50, y: slot.y - 8, text: '+25', life: 46, col: '#ffb703' })
+      sfx.pop()
+    }
+
     function throwNow() {
       if (st.phase !== 'play') return
-      st.thrown += 1
       if (st.mode === 'climb') {
-        const i = st.knives.length
-        if (i >= MAX_KNIVES) {
-          levelClear()
-          return
-        }
-        const slot = SLOTS[i]
-        const side = slot.x >= TOWER_CX ? -1 : 1
-        // the blade covers slot.x → slot.x - side*20; the chick is a ~22px body
-        const chickX = TOWER_CX + Math.sin(st.t * p.swayW) * p.swayA
-        const blade0 = side === -1 ? slot.x - 20 : slot.x - 4
-        const blade1 = side === -1 ? slot.x + 4 : slot.x + 20
-        if (Math.abs(st.chickY - slot.y) < 16 && chickX + 11 > blade0 && chickX - 11 < blade1) {
-          // knife lands on the chick
-          st.knocked.push({ x: slot.x + 20, y: slot.y, vy: -2, rot: 0, life: 40 })
-          loseLife(chickX, st.chickY - 14)
-          return
-        }
-        st.knives.push({ y: slot.y, side, x: slot.x })
-        st.score += 25
-        st.popups.push({ x: slot.x + side * 46, y: slot.y - 8, text: '+25', life: 46, col: '#ffb703' })
-        sfx.pop()
+        const used = st.knives.length + st.flights.length
+        if (used >= MAX_KNIVES) return // tower full — the level clear follows
+        st.flights.push({ slot: used, t: 0, dur: 10 })
+        sfx.flap()
       } else {
         // radial knife from the orbiting chick — shatters the first aligned block
+        const lt = st.levelT / 60 // seconds since this level started
         let hitIdx = -1
         let bestR = Infinity
         for (let j = 0; j < st.blocks.length; j++) {
           const b = st.blocks[j]
           if (!b.alive) continue
-          const r = b.r0 - b.v * st.t
-          const th = b.th0 + 0.12 * st.t
+          const r = b.r0 - b.v * lt
+          const th = b.th0 + 0.12 * lt
           if (r < 46 || r > 250) continue
           if (angleDiff(th, st.chickTheta) < 0.32 && r < bestR) {
             bestR = r
@@ -295,12 +321,19 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
         }
         if (hitIdx >= 0) {
           const b = st.blocks[hitIdx]
-          const r = b.r0 - b.v * st.t
-          const th = b.th0 + 0.12 * st.t
+          const r = b.r0 - b.v * lt
+          const th = b.th0 + 0.12 * lt
           const bx = TOWER_CX + Math.cos(th) * r
           const by = 120 + Math.sin(th) * r
           b.alive = false
           st.score += 40
+          st.rays.push({
+            x0: TOWER_CX + Math.cos(st.chickTheta) * 40,
+            y0: 120 + Math.sin(st.chickTheta) * 40,
+            x1: bx,
+            y1: by,
+            life: 14,
+          })
           st.popups.push({ x: bx, y: by - 14, text: '+40', life: 46, col: '#4cc9f0' })
           for (let i = 0; i < 8; i++) {
             const a = (i / 8) * Math.PI * 2
@@ -332,6 +365,7 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
       const p = levelParams(st.level)
 
       if (st.phase === 'play') {
+        st.levelT += dt
         if (st.mode === 'climb') {
           st.chickY += p.desc * dt / 60
           // held = rapid fire
@@ -341,6 +375,14 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
               throwNow()
               st.holdT = HOLD_MS / (1000 / 60)
             }
+          }
+          // advance knife flights; the hit is judged at landing
+          for (let fi = st.flights.length - 1; fi >= 0; fi--) {
+            const f = st.flights[fi]
+            f.t += dt
+            if (f.t < f.dur) continue
+            st.flights.splice(fi, 1)
+            landClimbKnife(f.slot)
           }
           for (const k of st.knocked) {
             k.y += k.vy * dt
@@ -358,10 +400,11 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
               st.holdT = HOLD_MS / (1000 / 60)
             }
           }
+          const lt = st.levelT / 60 // seconds since this level started
           for (const b of st.blocks) {
             if (!b.alive) continue
-            const r = b.r0 - b.v * st.t
-            const th = b.th0 + 0.12 * st.t
+            const r = b.r0 - b.v * lt
+            const th = b.th0 + 0.12 * lt
             if (r < 46 && angleDiff(th, st.chickTheta) < 0.5) {
               b.alive = false
               const bx = TOWER_CX + Math.cos(th) * 44
@@ -381,6 +424,8 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
         pp.life -= dt
       }
       st.popups = st.popups.filter((pp) => pp.life > 0)
+      for (const r of st.rays) r.life -= dt
+      st.rays = st.rays.filter((r) => r.life > 0)
       for (const pt of st.parts) {
         pt.x += pt.vx * dt
         pt.y += pt.vy * dt
@@ -436,16 +481,35 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
 
       // stuck knives (climb)
       for (const k of st.knives) drawKnife(ctx, k.x, k.y, k.side)
+      // in-flight knives rising to their slot (climb)
+      for (const f of st.flights) {
+        const slot = SLOTS[f.slot]
+        const k = f.t / f.dur
+        const fy = H - 16 + (slot.y - (H - 16)) * k
+        drawKnife(ctx, slot.x, fy, 1, -Math.PI / 2)
+      }
       // knocked knives
       for (const k of st.knocked) drawKnife(ctx, k.x, k.y, 1, k.rot)
+      // throw flash lines (smash)
+      for (const r of st.rays) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.95)'
+        ctx.lineWidth = 3
+        ctx.globalAlpha = Math.min(1, r.life / 14)
+        ctx.beginPath()
+        ctx.moveTo(r.x0, r.y0)
+        ctx.lineTo(r.x1, r.y1)
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
 
       // blocks (smash)
       if (st.mode === 'smash') {
+        const lt = st.levelT / 60 // seconds since this level started
         for (const b of st.blocks) {
           if (!b.alive) continue
-          const r = b.r0 - b.v * st.t
+          const r = b.r0 - b.v * lt
           if (r < 14) continue
-          const th = b.th0 + 0.12 * st.t
+          const th = b.th0 + 0.12 * lt
           const bx = TOWER_CX + Math.cos(th) * r
           const by = 120 + Math.sin(th) * r
           drawBlock(ctx, bx, by, 17, st.t + b.th0)
@@ -526,23 +590,34 @@ export default function NimKnife({ skin, player, onExit, onScore, requestVerify,
       ctx.fillStyle = 'rgba(255,255,255,0.75)'
       ctx.fillText(st.mode === 'climb' ? 'KNIFE CLIMB' : 'BLOCK SMASH', TOWER_CX, 48)
 
-      // level flash banner
-      if (st.flashT > 0 && st.level > 1) {
+      // level flash banner (also a "get ready" grace on level 1)
+      if (st.flashT > 0) {
         ctx.globalAlpha = Math.min(1, st.flashT / 20)
         ctx.fillStyle = 'rgba(10,18,48,0.85)'
-        rr(ctx, TOWER_CX - 86, 260, 172, 44, 12)
+        rr(ctx, TOWER_CX - 86, 260, 172, 54, 12)
         ctx.fill()
         ctx.globalAlpha = 1
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 15px system-ui'
-        ctx.fillText(`LEVEL ${st.level}`, TOWER_CX, 280)
+        ctx.fillText(st.level === 1 ? 'LEVEL 1' : `LEVEL ${st.level}`, TOWER_CX, 279)
         ctx.font = '11px system-ui'
         ctx.fillStyle = '#9ec5ff'
-        ctx.fillText(st.mode === 'climb' ? 'climb — don’t knife the chick' : 'smash every block', TOWER_CX, 296)
+        ctx.fillText(
+          st.mode === 'climb'
+            ? st.level === 1
+              ? 'throw when the chick is clear'
+              : 'climb — don’t knife the chick'
+            : 'smash every block',
+          TOWER_CX,
+          294
+        )
+        ctx.fillText(st.level === 1 ? 'GET READY…' : 'GO!', TOWER_CX, 308)
       }
     }
 
     const onPointerDown = (e) => {
+      // ignore taps on the back / mute buttons
+      if (e.target && e.target.closest && e.target.closest('button')) return
       e.preventDefault()
       if (st.phase === 'ready') {
         start()
