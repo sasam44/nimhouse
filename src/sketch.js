@@ -498,10 +498,11 @@ export function drawRushPreview(ctx, w, h, skin) {
   drawChicken(ctx, w / 2 - 12, h - 18, 0.85, skin, 0.6, 0.8)
 }
 
-/** Cartoon sausage with a surprised face (no shadow). */
-export function drawSausage(ctx, x, y, s) {
+/** Cartoon sausage with a surprised face (no shadow). `rot` = rotation in radians. */
+export function drawSausage(ctx, x, y, s, rot = 0) {
   ctx.save()
   ctx.translate(x, y)
+  ctx.rotate(rot)
   ctx.scale(s, s)
   ctx.fillStyle = '#c1613b'
   rr(ctx, -22, -9, 44, 18, 9)
@@ -540,63 +541,115 @@ export function drawSausage(ctx, x, y, s) {
   ctx.restore()
 }
 
-/** Mini slingshot + trajectory + sausages (NimCannon card thumbnail). */
-export function drawCannonPreview(ctx, w, h, skin) {
+/** Flying sausages + slice trail + knife (NimSlice card thumbnail). */
+export function drawSlicePreview(ctx, w, h, skin) {
   ctx.clearRect(0, 0, w, h)
-  // ground
-  ctx.fillStyle = '#7ed957'
-  ctx.fillRect(0, h - 12, w, 12)
-  // slingshot
+  // warm kitchen wall
+  const wall = ctx.createLinearGradient(0, 0, 0, h)
+  wall.addColorStop(0, '#fff6e0')
+  wall.addColorStop(1, '#ffd9a0')
+  ctx.fillStyle = wall
+  ctx.fillRect(0, 0, w, h)
+  // counter
+  ctx.fillStyle = '#c98a4b'
+  ctx.fillRect(0, h - 10, w, 10)
+  ctx.fillStyle = '#e8b877'
+  ctx.fillRect(0, h - 10, w, 2.5)
+  // flying sausage (mid-air, tilted)
+  ctx.save()
+  ctx.translate(w * 0.34, h * 0.42)
+  ctx.rotate(-0.5)
+  ctx.translate(-w * 0.34, -h * 0.42)
+  drawSausage(ctx, w * 0.34, h * 0.42, 0.8)
+  ctx.restore()
+  // second sausage, upper right
+  ctx.save()
+  ctx.translate(w * 0.72, h * 0.22)
+  ctx.rotate(0.6)
+  ctx.translate(-w * 0.72, -h * 0.22)
+  drawSausage(ctx, w * 0.72, h * 0.22, 0.62)
+  ctx.restore()
+  // sliced halves near the bottom
+  ctx.fillStyle = '#c1613b'
+  ctx.beginPath()
+  ctx.ellipse(w * 0.52, h * 0.72, 9, 6, 0.3, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.ellipse(w * 0.63, h * 0.78, 9, 6, -0.2, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#f3e0c2'
+  ctx.beginPath()
+  ctx.ellipse(w * 0.56, h * 0.74, 2.2, 5, 0.3, 0, Math.PI * 2)
+  ctx.fill()
+  // the black bomb (don't slice!)
+  ctx.save()
+  ctx.translate(w * 0.8, h * 0.62)
+  ctx.rotate(0.35)
+  ctx.scale(0.6, 0.6)
+  ctx.translate(-w * 0.8, -h * 0.62)
+  ctx.translate(w * 0.8, h * 0.62)
+  ctx.fillStyle = '#343a4d'
+  rr(ctx, -22, -9, 44, 18, 9)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)'
+  ctx.lineWidth = 1.6
+  rr(ctx, -22, -9, 44, 18, 9)
+  ctx.stroke()
+  ctx.fillStyle = '#e63946'
+  ctx.beginPath()
+  ctx.arc(-4, 0, 2.4, 0, Math.PI * 2)
+  ctx.arc(5, 0, 2.4, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#8d6e4a'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(0, -9)
+  ctx.quadraticCurveTo(2, -14, 6, -16)
+  ctx.stroke()
+  ctx.fillStyle = '#ffd60a'
+  ctx.beginPath()
+  ctx.arc(7, -17, 2.6, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+  // big slice trail with knife at the tip
   ctx.lineCap = 'round'
-  ctx.strokeStyle = '#6e3f16'
-  ctx.lineWidth = 5
+  ctx.strokeStyle = 'rgba(239,71,111,0.45)'
+  ctx.lineWidth = 11
   ctx.beginPath()
-  ctx.moveTo(w * 0.26, h - 13)
-  ctx.lineTo(w * 0.26, h * 0.4)
-  ctx.moveTo(w * 0.26, h * 0.4)
-  ctx.lineTo(w * 0.17, h * 0.28)
-  ctx.moveTo(w * 0.26, h * 0.4)
-  ctx.lineTo(w * 0.35, h * 0.28)
+  ctx.moveTo(w * 0.1, h * 0.92)
+  ctx.quadraticCurveTo(w * 0.3, h * 0.62, w * 0.46, h * 0.5)
   ctx.stroke()
-  ctx.strokeStyle = '#a8672f'
-  ctx.lineWidth = 3
+  ctx.strokeStyle = '#fff7e0'
+  ctx.lineWidth = 7
   ctx.beginPath()
-  ctx.moveTo(w * 0.26, h - 13)
-  ctx.lineTo(w * 0.26, h * 0.4)
-  ctx.moveTo(w * 0.26, h * 0.4)
-  ctx.lineTo(w * 0.17, h * 0.28)
-  ctx.moveTo(w * 0.26, h * 0.4)
-  ctx.lineTo(w * 0.35, h * 0.28)
+  ctx.moveTo(w * 0.1, h * 0.92)
+  ctx.quadraticCurveTo(w * 0.3, h * 0.62, w * 0.46, h * 0.5)
   ctx.stroke()
-  // stretched band + pulled chick
-  ctx.strokeStyle = '#ef476f'
-  ctx.lineWidth = 2.5
+  // knife at the trail tip
+  ctx.save()
+  ctx.translate(w * 0.46, h * 0.5)
+  ctx.rotate(-0.62)
+  const g = ctx.createLinearGradient(0, -5, 0, 5)
+  g.addColorStop(0, '#ffffff')
+  g.addColorStop(1, '#b9c6d4')
+  ctx.fillStyle = g
   ctx.beginPath()
-  ctx.moveTo(w * 0.17, h * 0.28)
-  ctx.lineTo(w * 0.27, h * 0.55)
-  ctx.lineTo(w * 0.35, h * 0.28)
+  ctx.moveTo(0, -5)
+  ctx.lineTo(24, -3)
+  ctx.lineTo(30, 0)
+  ctx.lineTo(24, 3)
+  ctx.lineTo(0, 5)
+  ctx.closePath()
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'
+  ctx.lineWidth = 1.2
   ctx.stroke()
-  drawChicken(ctx, w * 0.27, h * 0.53, 0.6, skin, 0.6, 0.5, -0.25)
-  // dotted trajectory
-  ctx.fillStyle = 'rgba(255,255,255,0.95)'
-  for (let i = 0; i < 7; i++) {
-    const t = i / 6
-    const x = w * 0.34 + t * w * 0.6
-    const y = h * 0.5 - Math.sin(t * Math.PI) * h * 0.34
-    ctx.beginPath()
-    ctx.arc(x, y, 2.1, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  // sausage targets on crates
-  ctx.fillStyle = '#c9853f'
-  ctx.fillRect(w * 0.72, h - 26, 16, 14)
-  ctx.fillRect(w * 0.86, h - 26, 16, 14)
-  ctx.strokeStyle = '#8d5524'
-  ctx.lineWidth = 1.5
-  ctx.strokeRect(w * 0.72, h - 26, 16, 14)
-  ctx.strokeRect(w * 0.86, h - 26, 16, 14)
-  drawSausage(ctx, w * 0.77, h - 34, 0.55)
-  drawSausage(ctx, w * 0.91, h - 34, 0.55)
+  ctx.fillStyle = '#8d5524'
+  rr(ctx, -13, -3.2, 13, 6.4, 3)
+  ctx.fill()
+  ctx.restore()
+  // chef chick
+  drawChicken(ctx, w * 0.16, h * 0.84, 0.62, skin, 0.6, 2, 0.05)
 }
 
 /** Fly + swatter + BONK (NimSwat thumbnail). */

@@ -155,34 +155,25 @@ const swatLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.swat') || '[]
 check('NimSwat score recorded', swatLb.length > 0)
 await backToHub()
 
-// ---------- NimCannon ----------
-// 3 fixed launches consume all shots (targets remain) → deterministic game over.
+// ---------- NimSlice ----------
+// Swipes map off-canvas in jsdom (rect 0) → no slices → sausages fall → 3 misses → game over.
 await openGame(5)
-check('NimCannon ready overlay', document.body.textContent.includes('DRAG & RELEASE to launch'))
+check('NimSlice ready overlay', document.body.textContent.includes('SWIPE to slice'))
 view = stage()
-function fireCannon() {
-  const down = new window.Event('pointerdown', { bubbles: true })
-  Object.defineProperty(down, 'clientX', { value: 280 })
-  Object.defineProperty(down, 'clientY', { value: 480 })
-  view.dispatchEvent(down)
-  const mv = new window.Event('pointermove', { bubbles: true })
-  Object.defineProperty(mv, 'clientX', { value: 20 })
-  Object.defineProperty(mv, 'clientY', { value: 560 })
-  view.dispatchEvent(mv)
-  const up = new window.Event('pointerup', { bubbles: true })
-  view.dispatchEvent(up)
-}
-fireCannon()
-await sleep(4500) // flight + bounces + settle → back to aim
-fireCannon()
-await sleep(4500)
-fireCannon()
-await sleep(4500)
+const down = new window.Event('pointerdown', { bubbles: true })
+Object.defineProperty(down, 'clientX', { value: 100 })
+Object.defineProperty(down, 'clientY', { value: 400 })
+view.dispatchEvent(down)
+const mv = new window.Event('pointermove', { bubbles: true })
+Object.defineProperty(mv, 'clientX', { value: 250 })
+Object.defineProperty(mv, 'clientY', { value: 150 })
+view.dispatchEvent(mv)
+await sleep(5500) // 3 sausages fly up + fall = 3 misses
 over = document.body.textContent.includes('Play again')
-check('NimCannon ends after 3 shots', over)
-const cannonLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.cannon') || '[]')
-check('NimCannon score recorded', cannonLb.length > 0)
-check('cannon score is a multiple of 10', cannonLb.length > 0 && cannonLb[0].score % 10 === 0)
+check('NimSlice ends after 3 escapes', over)
+const sliceLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.slice') || '[]')
+check('NimSlice score recorded', sliceLb.length > 0)
+check('slice score is a multiple of 5', sliceLb.length > 0 && sliceLb[0].score % 5 === 0)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)

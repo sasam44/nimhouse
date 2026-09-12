@@ -8,7 +8,7 @@ import {
   drawBoardPreview,
   drawRushPreview,
   drawSwatPreview,
-  drawCannonPreview,
+  drawSlicePreview,
 } from './sketch'
 import { loadLB, bestScore, markVerified } from './leaderboard'
 import { sfx } from './sound'
@@ -17,7 +17,7 @@ import NimStack from './games/NimStack'
 import NimBullseye from './games/NimBullseye'
 import NimRush from './games/NimRush'
 import NimSwat from './games/NimSwat'
-import NimCannon from './games/NimCannon'
+import NimSlice from './games/NimSlice'
 
 const GAMES = [
   {
@@ -56,11 +56,11 @@ const GAMES = [
     lbLabel: 'Swat',
   },
   {
-    id: 'cannon',
-    name: 'NimCannon',
-    blurb: 'Drag, aim, release — fling your chick through the sausage tower. Pure ballistics.',
-    how: 'drag & release',
-    lbLabel: 'Cannon',
+    id: 'slice',
+    name: 'NimSlice',
+    blurb: 'Sausage volleys incoming — swipe to slice them all. Never the black one.',
+    how: 'swipe to slice',
+    lbLabel: 'Slice',
   },
 ]
 
@@ -98,7 +98,7 @@ function GameThumb({ kind, skin, dartSkin }) {
     else if (kind === 'bull') drawBoardPreview(ctx, 76, 76, dartSkin)
     else if (kind === 'rush') drawRushPreview(ctx, 76, 76, skin)
     else if (kind === 'swat') drawSwatPreview(ctx, 76, 76)
-    else drawCannonPreview(ctx, 76, 76, skin)
+    else drawSlicePreview(ctx, 76, 76, skin)
   }, [kind, skin, dartSkin])
   return <canvas ref={ref} className="game-thumb" width={76} height={76} />
 }
@@ -386,10 +386,10 @@ export default function App() {
       </>
     )
   }
-  if (view === 'cannon') {
+  if (view === 'slice') {
     return (
       <>
-        <NimCannon skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('cannon', id)} />
+        <NimSlice skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('slice', id)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -492,14 +492,14 @@ export default function App() {
             <div className="game-card" key={g.id}>
               <GameThumb
                 kind={g.id}
-                skin={g.id === 'chick' || g.id === 'rush' || g.id === 'cannon' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
+                skin={g.id === 'chick' || g.id === 'rush' || g.id === 'slice' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
                 dartSkin={dartSkin}
               />
               <div className="game-info">
                 <div className="name">{g.name}</div>
                 <div className="blurb">{g.blurb}</div>
                 <div className="game-foot">
-                  <span className="best-chip">
+                 <span className="best-chip">
                     best <b>{bests[g.id]}</b>
                   </span>
                   <button className="btn primary small" onClick={() => setView(g.id)}>
@@ -622,3 +622,4 @@ export default function App() {
     </div>
   )
 }
+
