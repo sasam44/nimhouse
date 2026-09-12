@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { drawChicken } from '../sketch'
+import { drawChicken, drawSun, drawCloud, rr } from '../sketch'
 import { sfx } from '../sound'
 import { bestScore, submitScore } from '../leaderboard'
 import { getDeviceId } from '../wallet'
@@ -7,11 +7,11 @@ import ScoreOverlay from '../components/ScoreOverlay'
 
 const W = 360
 const H = 600
-const GROUND_H = 84
-const CHICK_X = 82
-const CHICK_R = 15
-const PIPE_W = 64
-const GAP = 158
+const GROUND_H = 64
+const CHICK_X = 78
+const CHICK_R = 12
+const PIPE_W = 50
+const GAP = 172
 
 const QUOTES = [
   'The pipes won. The mustache did not.',
@@ -29,31 +29,68 @@ function circleRect(cx, cy, r, rx, ry, rw, rh) {
   return dx * dx + dy * dy <= r * r
 }
 
-function cloud(ctx, x, y, s) {
+/** cute face on a pipe; pupils look toward the chicken */
+function pipeFace(ctx, cx, cy, t, mood) {
+  ctx.save()
+  const look = Math.sin(t * 1.5) * 0.8
+  ctx.fillStyle = '#fff'
   ctx.beginPath()
-  ctx.arc(x, y, 14 * s, 0, Math.PI * 2)
-  ctx.arc(x + 16 * s, y + 4 * s, 11 * s, 0, Math.PI * 2)
-  ctx.arc(x - 15 * s, y + 5 * s, 10 * s, 0, Math.PI * 2)
+  ctx.arc(cx - 8, cy, 4, 0, Math.PI * 2)
   ctx.fill()
+  ctx.beginPath()
+  ctx.arc(cx + 8, cy, 4, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#2b2b2b'
+  ctx.beginPath()
+  ctx.arc(cx - 8 - 1.4 + look, cy + (mood === 'o' ? 0 : 0.6), 1.9, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(cx + 8 - 1.4 + look, cy + (mood === 'o' ? 0 : 0.6), 1.9, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#2b2b2b'
+  ctx.lineWidth = 1.6
+  ctx.lineCap = 'round'
+  if (mood === 'o') {
+    ctx.beginPath()
+    ctx.arc(cx, cy + 8, 2.6, 0, Math.PI * 2)
+    ctx.stroke()
+  } else {
+    ctx.beginPath()
+    ctx.arc(cx, cy + 6.5, 3.4, Math.PI * 0.15, Math.PI * 0.85)
+    ctx.stroke()
+  }
+  ctx.restore()
 }
 
-function pipeBody(ctx, x, y, w, h, isTop) {
+function pipeBody(ctx, x, y, w, h, isTop, t, mood) {
   if (h <= 0) return
   const g = ctx.createLinearGradient(x, 0, x + w, 0)
-  g.addColorStop(0, '#2f9e54')
-  g.addColorStop(0.35, '#4cc473')
-  g.addColorStop(1, '#2c8f4c')
+  g.addColorStop(0, '#3fae4e')
+  g.addColorStop(0.3, '#6fdc6a')
+  g.addColorStop(0.65, '#4cc45c')
+  g.addColorStop(1, '#2f8f42')
   ctx.fillStyle = g
   ctx.fillRect(x, y, w, h)
-  ctx.fillStyle = 'rgba(0,0,0,0.14)'
-  ctx.fillRect(x, y, 6, h)
-  const rimH = 22
+  // glossy highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.28)'
+  ctx.fillRect(x + 7, y, 9, h)
+  // cap (rounded, slightly wider)
+  const rimH = 24
   const rimY = isTop ? y + h - rimH : y
-  ctx.fillStyle = '#3bb365'
-  ctx.fillRect(x - 4, rimY, w + 8, rimH)
-  ctx.strokeStyle = 'rgba(0,0,0,0.25)'
+  const cg = ctx.createLinearGradient(x - 5, 0, x + w + 5, 0)
+  cg.addColorStop(0, '#4cbf5c')
+  cg.addColorStop(0.4, '#8ee88a')
+  cg.addColorStop(1, '#37934a')
+  ctx.fillStyle = cg
+  rr(ctx, x - 5, rimY, w + 10, rimH, 7)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(20,70,30,0.45)'
   ctx.lineWidth = 2
-  ctx.strokeRect(x - 4, rimY, w + 8, rimH)
+  rr(ctx, x - 5, rimY, w + 10, rimH, 7)
+  ctx.stroke()
+  // face near the opening
+  const fy = isTop ? rimY - 14 : rimY + rimH + 14
+  pipeFace(ctx, x + w / 2, fy, t, mood)
 }
 
 export default function NimChick({ skin, player, onExit, onScore, requestVerify, walletMode }) {
@@ -92,15 +129,16 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
       deadAt: 0,
       shake: 0,
       groundOff: 0,
+      hillsOff: 0,
       clouds: [
-        { x: 40, y: 90, s: 1 },
-        { x: 210, y: 160, s: 0.7 },
-        { x: 320, y: 60, s: 0.85 },
+        { x: 40, y: 96, s: 1 },
+        { x: 220, y: 170, s: 0.7 },
+        { x: 330, y: 64, s: 0.85 },
       ],
     }
 
     function newPipe(x) {
-      const margin = 70
+      const margin = 64
       const span = H - GROUND_H - margin * 2 - GAP
       const gapY = margin + GAP / 2 + Math.random() * span
       return { x, gapY, passed: false }
@@ -109,8 +147,8 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
     function start() {
       st.phase = 'playing'
       st.y = H / 2
-      st.vy = -6.9
-      st.pipes = [newPipe(W + 40), newPipe(W + 40 + 215), newPipe(W + 40 + 430)]
+      st.vy = -6.6
+      st.pipes = [newPipe(W + 30), newPipe(W + 30 + 225), newPipe(W + 30 + 450)]
       st.score = 0
       st.flapAnim = 1
       setScore(0)
@@ -144,7 +182,7 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
       if (st.phase !== 'playing') return
       st.phase = 'dying'
       st.deadAt = st.t
-      st.shake = 10
+      st.shake = 9
       sfx.hit()
     }
 
@@ -155,7 +193,7 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
         return
       }
       if (st.phase === 'playing') {
-        st.vy = -6.9
+        st.vy = -6.6
         st.flapAnim = 1
         sfx.flap()
       }
@@ -186,15 +224,16 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
       st.t += dt / 60
 
       if (st.phase === 'playing') {
-        st.vy = Math.min(st.vy + 0.38 * dt, 11.5)
+        st.vy = Math.min(st.vy + 0.36 * dt, 11)
         st.y += st.vy * dt
         st.flapAnim = Math.max(0, st.flapAnim - dt * 0.12)
 
-        const speed = 2.4 + Math.min(st.score * 0.035, 1.4)
+        const speed = 2.1 + Math.min(st.score * 0.035, 1.2)
         st.groundOff += speed * dt
+        st.hillsOff += speed * 0.4 * dt
         for (const p of st.pipes) p.x -= speed * dt
-        if (st.pipes[st.pipes.length - 1].x < W - 215) {
-          st.pipes.push(newPipe(st.pipes[st.pipes.length - 1].x + 215))
+        if (st.pipes[st.pipes.length - 1].x < W - 225) {
+          st.pipes.push(newPipe(st.pipes[st.pipes.length - 1].x + 225))
         }
         if (st.pipes[0].x < -PIPE_W - 12) st.pipes.shift()
 
@@ -226,11 +265,11 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
           }
         }
       } else if (st.phase === 'dying') {
-        st.vy = Math.min(st.vy + 0.5 * dt, 14)
+        st.vy = Math.min(st.vy + 0.5 * dt, 13)
         st.y = Math.min(st.y + st.vy * dt, H - GROUND_H - CHICK_R)
         st.flapAnim = 0
         if (st.shake > 0) st.shake = Math.max(0, st.shake - dt * 0.8)
-        if (st.t - st.deadAt > 0.75) finish()
+        if (st.t - st.deadAt > 0.7) finish()
       } else if (st.phase === 'ready') {
         st.y = H / 2 + Math.sin(st.t * 2.4) * 6
         st.flapAnim = st.t * 4
@@ -239,62 +278,104 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
       draw(ctx, st)
     }
 
+    function hillLayer(ctx, offset, baseY, amp, color, freq) {
+      ctx.fillStyle = color
+      ctx.beginPath()
+      ctx.moveTo(-10, H)
+      for (let x = -10; x <= W + 10; x += 10) {
+        const y = baseY + Math.sin((x + offset) * freq) * amp
+        ctx.lineTo(x, y)
+      }
+      ctx.lineTo(W + 10, H)
+      ctx.closePath()
+      ctx.fill()
+    }
+
+    function flower(ctx, x, y, c) {
+      ctx.fillStyle = c
+      for (let i = 0; i < 4; i++) {
+        const a = (i * Math.PI) / 2
+        ctx.beginPath()
+        ctx.arc(x + Math.cos(a) * 3, y + Math.sin(a) * 3, 2.2, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.fillStyle = '#ffd23f'
+      ctx.beginPath()
+      ctx.arc(x, y, 2, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
     function draw(ctx, st) {
       ctx.save()
       if (st.shake > 0) {
         ctx.translate((Math.random() - 0.5) * st.shake, (Math.random() - 0.5) * st.shake)
       }
 
+      // cheerful sky
       const sky = ctx.createLinearGradient(0, 0, 0, H)
-      sky.addColorStop(0, '#79c7f0')
-      sky.addColorStop(0.7, '#cdeefc')
-      sky.addColorStop(1, '#e8f9ff')
+      sky.addColorStop(0, '#8ee0ff')
+      sky.addColorStop(0.55, '#c8f0ff')
+      sky.addColorStop(1, '#fff6d8')
       ctx.fillStyle = sky
       ctx.fillRect(-12, -12, W + 24, H + 24)
 
-      ctx.fillStyle = 'rgba(255,224,130,0.9)'
-      ctx.beginPath()
-      ctx.arc(300, 78, 34, 0, Math.PI * 2)
-      ctx.fill()
+      drawSun(ctx, 302, 74, 26)
 
-      ctx.fillStyle = 'rgba(255,255,255,0.85)'
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'
       for (const c of st.clouds) {
-        const span = W + 140
-        const cx = ((((c.x - st.t * 10 * c.s) % span) + span) % span) - 70
-        cloud(ctx, cx, c.y, c.s)
+        const span = W + 150
+        const cx = ((((c.x - st.t * 9 * c.s) % span) + span) % span) - 75
+        drawCloud(ctx, cx, c.y, c.s)
       }
 
+      // parallax hills
+      hillLayer(ctx, st.hillsOff * 0.6, H - GROUND_H - 54, 22, 'rgba(122,214,133,0.55)', 0.012)
+      hillLayer(ctx, st.hillsOff, H - GROUND_H - 26, 16, 'rgba(96,200,110,0.75)', 0.02)
+
+      // pipes (mood: surprised 'o' while dying)
+      const mood = st.phase === 'dying' ? 'o' : 'smile'
       for (const p of st.pipes) {
         const topH = p.gapY - GAP / 2
         const botY = p.gapY + GAP / 2
-        pipeBody(ctx, p.x, 0, PIPE_W, topH, true)
-        pipeBody(ctx, p.x, botY, PIPE_W, H - GROUND_H - botY, false)
+        pipeBody(ctx, p.x, 0, PIPE_W, topH, true, st.t, mood)
+        pipeBody(ctx, p.x, botY, PIPE_W, H - GROUND_H - botY, false, st.t, mood)
       }
 
-      ctx.fillStyle = '#8fd16b'
-      ctx.fillRect(-12, H - GROUND_H, W + 24, 14)
-      ctx.fillStyle = '#c99a63'
-      ctx.fillRect(-12, H - GROUND_H + 14, W + 24, GROUND_H - 14)
-      ctx.fillStyle = 'rgba(0,0,0,0.08)'
-      const off = st.groundOff % 48
-      for (let x = -48 - off; x < W + 48; x += 48) {
-        ctx.fillRect(x, H - GROUND_H + 14, 24, GROUND_H - 14)
+      // ground
+      ctx.fillStyle = '#7ed957'
+      ctx.fillRect(-12, H - GROUND_H, W + 24, 12)
+      ctx.fillStyle = 'rgba(255,255,255,0.35)'
+      ctx.fillRect(-12, H - GROUND_H, W + 24, 3)
+      ctx.fillStyle = '#e0a55e'
+      ctx.fillRect(-12, H - GROUND_H + 12, W + 24, GROUND_H - 12)
+      ctx.fillStyle = 'rgba(0,0,0,0.07)'
+      const off = st.groundOff % 52
+      for (let x = -52 - off; x < W + 52; x += 52) {
+        ctx.fillRect(x, H - GROUND_H + 12, 26, GROUND_H - 12)
+      }
+      // scrolling flowers on the grass line
+      const foff = st.groundOff % 90
+      for (let x = -90 - foff; x < W + 90; x += 90) {
+        flower(ctx, x + 30, H - GROUND_H - 1, x % 180 === 0 ? '#ff8fab' : '#c77dff')
       }
 
+      // the chicken
       const rot =
         st.phase === 'playing' || st.phase === 'dying'
-          ? Math.max(-0.5, Math.min(1.25, st.vy * 0.06))
+          ? Math.max(-0.45, Math.min(1.2, st.vy * 0.055))
           : 0
-      drawChicken(ctx, CHICK_X, st.y, 1.5, skinRef.current, st.t, st.flapAnim * 6 + st.t * 2, rot)
+      drawChicken(ctx, CHICK_X, st.y, 1.15, skinRef.current, st.t, st.flapAnim * 6 + st.t * 2, rot)
 
+      // score
       if (st.phase === 'playing' || st.phase === 'dying') {
-        ctx.font = '800 52px system-ui, sans-serif'
+        ctx.font = '800 44px system-ui, sans-serif'
         ctx.textAlign = 'center'
-        ctx.lineWidth = 6
-        ctx.strokeStyle = 'rgba(30,42,60,0.5)'
-        ctx.strokeText(String(st.score), W / 2, 84)
-        ctx.fillStyle = '#fff'
-        ctx.fillText(String(st.score), W / 2, 84)
+        ctx.lineWidth = 7
+        ctx.lineJoin = 'round'
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+        ctx.strokeText(String(st.score), W / 2, 74)
+        ctx.fillStyle = '#2b6cb0'
+        ctx.fillText(String(st.score), W / 2, 74)
       }
 
       ctx.restore()
@@ -340,7 +421,7 @@ export default function NimChick({ skin, player, onExit, onScore, requestVerify,
           <div className="overlay">
             <div className="panel">
               <h2>NimChick</h2>
-              <p className="panel-sub">An absurd chicken. Endless pipes. Zero mercy. Pure flap skill.</p>
+              <p className="panel-sub">An absurd chicken. Endless pipes with faces. Zero mercy.</p>
               <p className="panel-hint">TAP or SPACE to flap</p>
             </div>
           </div>

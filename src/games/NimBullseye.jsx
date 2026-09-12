@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { drawDart } from '../sketch'
+import { drawDart, drawSun, drawCloud, rr } from '../sketch'
 import { sfx } from '../sound'
 import { bestScore, submitScore } from '../leaderboard'
 import { getDeviceId } from '../wallet'
@@ -12,15 +12,17 @@ const CY = 232
 const R = 118
 const DARTS_PER_ROUND = 5
 const SWEET = 72 // ideal power
+const DART_SCALE = 1.15
+const TIP_LEN = 24 * DART_SCALE // tip offset inside drawDart local coords
 
 const RINGS = [
-  { r: 118, pts: 1, c: '#33415c' },
-  { r: 96, pts: 3, c: '#e63946' },
-  { r: 74, pts: 5, c: '#17c964' },
-  { r: 52, pts: 7, c: '#e63946' },
-  { r: 30, pts: 10, c: '#17c964' },
-  { r: 16, pts: 25, c: '#f5f7fa' },
-  { r: 8, pts: 50, c: '#ffd23f' },
+  { r: 118, pts: 1, c: '#2f3542' },
+  { r: 96, pts: 3, c: '#ef476f' },
+  { r: 74, pts: 5, c: '#06d6a0' },
+  { r: 52, pts: 7, c: '#ef476f' },
+  { r: 30, pts: 10, c: '#06d6a0' },
+  { r: 16, pts: 25, c: '#f1faee' },
+  { r: 8, pts: 50, c: '#ffd60a' },
 ]
 
 const QUOTES = [
@@ -133,7 +135,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       st.fly = {
         t: 0,
         fromX: CX,
-        fromY: H + 50,
+        fromY: H + 60,
         toX: a.x + dx * drift,
         toY: a.y + dy * drift,
       }
@@ -197,40 +199,98 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
     }
 
     function drawBoard(ctx) {
-      // outer frame
-      ctx.fillStyle = '#0e1626'
+      // soft drop shadow
+      const sh = ctx.createRadialGradient(CX, CY + 14, 30, CX, CY + 14, R + 40)
+      sh.addColorStop(0, 'rgba(20,30,50,0.4)')
+      sh.addColorStop(1, 'rgba(20,30,50,0)')
+      ctx.fillStyle = sh
       ctx.beginPath()
-      ctx.arc(CX, CY, R + 8, 0, Math.PI * 2)
+      ctx.ellipse(CX, CY + 16, R + 34, R + 26, 0, 0, Math.PI * 2)
       ctx.fill()
+
+      // wooden frame
+      const wood = ctx.createLinearGradient(CX - R, CY - R, CX + R, CY + R)
+      wood.addColorStop(0, '#b06a2c')
+      wood.addColorStop(0.5, '#8d5524')
+      wood.addColorStop(1, '#6e3f16')
+      ctx.fillStyle = wood
+      ctx.beginPath()
+      ctx.arc(CX, CY, R + 11, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(50,25,5,0.6)'
+      ctx.lineWidth = 2.5
+      ctx.stroke()
+
+      // rings
       for (const r of RINGS) {
         ctx.fillStyle = r.c
         ctx.beginPath()
         ctx.arc(CX, CY, r.r, 0, Math.PI * 2)
         ctx.fill()
       }
-      // spokes
-      ctx.strokeStyle = 'rgba(14,22,38,0.55)'
+      // gold bullseye rim
+      ctx.strokeStyle = '#e8940a'
       ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(CX, CY, 8, 0, Math.PI * 2)
+      ctx.stroke()
+
+      // spokes
+      ctx.strokeStyle = 'rgba(14,22,38,0.4)'
+      ctx.lineWidth = 1.6
       for (let i = 0; i < 8; i++) {
         const a = (i * Math.PI) / 4
         ctx.beginPath()
-        ctx.moveTo(CX, CY)
-        ctx.lineTo(CX + Math.cos(a) * R, CY + Math.sin(a) * R)
+        ctx.moveTo(CX + Math.cos(a) * 9, CY + Math.sin(a) * 9)
+        ctx.lineTo(CX + Math.cos(a) * (R - 1), CY + Math.sin(a) * (R - 1))
         ctx.stroke()
       }
+
+      // 3D dome: highlight top-left, shade bottom-right
+      const hi = ctx.createRadialGradient(CX - 45, CY - 55, 8, CX - 20, CY - 20, R + 30)
+      hi.addColorStop(0, 'rgba(255,255,255,0.30)')
+      hi.addColorStop(0.5, 'rgba(255,255,255,0.06)')
+      hi.addColorStop(1, 'rgba(255,255,255,0)')
+      ctx.fillStyle = hi
+      ctx.beginPath()
+      ctx.arc(CX, CY, R, 0, Math.PI * 2)
+      ctx.fill()
+      const lo = ctx.createRadialGradient(CX + 50, CY + 60, 10, CX + 20, CY + 30, R + 20)
+      lo.addColorStop(0, 'rgba(0,0,20,0.28)')
+      lo.addColorStop(1, 'rgba(0,0,20,0)')
+      ctx.fillStyle = lo
+      ctx.beginPath()
+      ctx.arc(CX, CY, R, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    /** draw a dart so its TIP is exactly at (tx, ty), pointing up */
+    function drawPinnedDart(ctx, tx, ty, scale = DART_SCALE) {
+      // pin shadow
+      ctx.fillStyle = 'rgba(0,0,20,0.35)'
+      ctx.beginPath()
+      ctx.ellipse(tx + 2, ty + 3, 4 * scale, 2 * scale, 0, 0, Math.PI * 2)
+      ctx.fill()
+      drawDart(ctx, tx, ty + TIP_LEN, 0, skinRef.current, scale)
     }
 
     function draw(ctx, st) {
+      // cheerful sky
       const bg = ctx.createLinearGradient(0, 0, 0, H)
-      bg.addColorStop(0, '#10192b')
-      bg.addColorStop(1, '#1a2947')
+      bg.addColorStop(0, '#8ee0ff')
+      bg.addColorStop(0.6, '#c9f3ff')
+      bg.addColorStop(1, '#fff6d8')
       ctx.fillStyle = bg
       ctx.fillRect(-12, -12, W + 24, H + 24)
+      drawSun(ctx, 322, 58, 20)
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'
+      drawCloud(ctx, 60 + Math.sin(st.t * 0.5) * 8, 70, 0.7)
+      drawCloud(ctx, 300 + Math.sin(st.t * 0.4 + 2) * 8, 470, 0.6)
 
       drawBoard(ctx)
 
-      // pinned darts
-      for (const d of st.thrown) drawDart(ctx, d.x, d.y, 0, skinRef.current, 1.1)
+      // pinned darts — TIP exactly at the scored point
+      for (const d of st.thrown) drawPinnedDart(ctx, d.x, d.y)
 
       // flying dart
       if (st.fly) {
@@ -238,86 +298,103 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         const e = t * t
         const x = st.fly.fromX + (st.fly.toX - st.fly.fromX) * e
         const y = st.fly.fromY + (st.fly.toY - st.fly.fromY) * e
-        drawDart(ctx, x, y, 0, skinRef.current, 0.7 + 0.5 * e)
+        drawDart(ctx, x, y + TIP_LEN * e, 0, skinRef.current, 0.7 + 0.45 * e)
       }
 
       // aim crosshair
       if (st.phase === 'playing' && !st.fly) {
         const a = aimPos(st.t)
-        ctx.strokeStyle = st.charging ? 'rgba(255,183,3,0.95)' : 'rgba(255,255,255,0.9)'
-        ctx.lineWidth = 2
+        ctx.strokeStyle = st.charging ? 'rgba(255,159,28,0.95)' : 'rgba(255,255,255,0.95)'
+        ctx.lineWidth = 2.5
+        ctx.lineCap = 'round'
         ctx.beginPath()
         ctx.arc(a.x, a.y, 11, 0, Math.PI * 2)
         ctx.stroke()
         ctx.beginPath()
-        ctx.moveTo(a.x - 16, a.y)
+        ctx.moveTo(a.x - 17, a.y)
         ctx.lineTo(a.x - 6, a.y)
         ctx.moveTo(a.x + 6, a.y)
-        ctx.lineTo(a.x + 16, a.y)
-        ctx.moveTo(a.x, a.y - 16)
+        ctx.lineTo(a.x + 17, a.y)
+        ctx.moveTo(a.x, a.y - 17)
         ctx.lineTo(a.x, a.y - 6)
         ctx.moveTo(a.x, a.y + 6)
-        ctx.lineTo(a.x, a.y + 16)
+        ctx.lineTo(a.x, a.y + 17)
         ctx.stroke()
       }
 
-      // floating points
+      // floating points (bouncy)
       if (st.float) {
         const f = st.float
         const alpha = Math.max(0, 1 - f.t / 70)
+        const size = f.t < 10 ? 18 + f.t * 1.6 : 34
         ctx.globalAlpha = alpha
-        ctx.font = '800 26px system-ui, sans-serif'
+        ctx.font = `800 ${size}px system-ui, sans-serif`
         ctx.textAlign = 'center'
-        ctx.fillStyle = f.pts >= 25 ? '#ffd23f' : '#fff'
-        ctx.fillText(f.pts === 0 ? 'MISS' : `+${f.pts}`, f.x, f.y - 24 - f.t * 0.5)
+        ctx.lineWidth = 5
+        ctx.lineJoin = 'round'
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+        const label = f.pts === 0 ? 'MISS' : `+${f.pts}`
+        const ly = f.y - 26 - f.t * 0.6
+        ctx.strokeText(label, f.x, ly)
+        ctx.fillStyle = f.pts >= 25 ? '#ffd60a' : f.pts === 0 ? '#ff5d5d' : '#2b6cb0'
+        ctx.fillText(label, f.x, ly)
         ctx.globalAlpha = 1
       }
 
       // ---------- HUD ----------
-      // total
       ctx.font = '800 30px system-ui, sans-serif'
       ctx.textAlign = 'left'
-      ctx.lineWidth = 5
-      ctx.strokeStyle = 'rgba(10,18,31,0.6)'
+      ctx.lineWidth = 6
+      ctx.lineJoin = 'round'
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'
       ctx.strokeText(String(st.total), 16, 44)
-      ctx.fillStyle = '#fff'
+      ctx.fillStyle = '#2b6cb0'
       ctx.fillText(String(st.total), 16, 44)
-      ctx.font = '600 11px system-ui, sans-serif'
-      ctx.fillStyle = 'rgba(234,241,250,0.55)'
-      ctx.fillText('ROUND TOTAL', 16, 60)
+      ctx.font = '700 10px system-ui, sans-serif'
+      ctx.fillStyle = 'rgba(43,70,110,0.7)'
+      ctx.fillText('ROUND TOTAL', 17, 58)
 
-      // darts left
+      // darts left (mini darts)
       for (let i = 0; i < DARTS_PER_ROUND; i++) {
-        ctx.globalAlpha = i < st.darts ? 1 : 0.22
-        drawDart(ctx, W - 24 - i * 22, 38, Math.PI, skinRef.current, 0.62)
+        ctx.globalAlpha = i < st.darts ? 1 : 0.25
+        drawDart(ctx, W - 26 - i * 24, 40, Math.PI, skinRef.current, 0.6)
       }
       ctx.globalAlpha = 1
 
-      // power meter (right side)
-      const mx = W - 30
-      const mt = 120
-      const mh = 330
-      ctx.fillStyle = 'rgba(10,18,31,0.75)'
-      ctx.fillRect(mx, mt, 14, mh)
-      ctx.strokeStyle = 'rgba(255,255,255,0.25)'
-      ctx.lineWidth = 1.5
-      ctx.strokeRect(mx, mt, 14, mh)
+      // power meter (rounded, sweet band glows)
+      const mx = W - 32
+      const mt = 110
+      const mh = 340
+      const mw = 16
+      ctx.fillStyle = 'rgba(20,35,60,0.55)'
+      rr(ctx, mx, mt, mw, mh, 8)
+      ctx.fill()
       // sweet band
       const yTop = mt + mh * (1 - (SWEET + 6) / 100)
       const yBot = mt + mh * (1 - (SWEET - 6) / 100)
-      ctx.fillStyle = 'rgba(34,224,127,0.5)'
-      ctx.fillRect(mx, yTop, 14, yBot - yTop)
+      ctx.fillStyle = 'rgba(34,224,127,0.55)'
+      rr(ctx, mx, yTop, mw, yBot - yTop, 3)
+      ctx.fill()
+      // sweet line
+      const ys = mt + mh * (1 - SWEET / 100)
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(mx - 3, ys)
+      ctx.lineTo(mx + mw + 3, ys)
+      ctx.stroke()
       // fill
       if (st.charging) {
-        const fh = (st.power / 100) * mh
+        const fh = (st.power / 100) * (mh - 4)
         const inSweet = st.power >= SWEET - 6 && st.power <= SWEET + 6
         ctx.fillStyle = inSweet ? '#22e07f' : '#ffb703'
-        ctx.fillRect(mx, mt + mh - fh, 14, fh)
+        rr(ctx, mx + 2, mt + 2 + (mh - 4) - fh, mw - 4, fh, 6)
+        ctx.fill()
       }
-      ctx.font = '700 10px system-ui, sans-serif'
-      ctx.fillStyle = 'rgba(234,241,250,0.6)'
+      ctx.font = '800 10px system-ui, sans-serif'
+      ctx.fillStyle = 'rgba(43,70,110,0.8)'
       ctx.textAlign = 'center'
-      ctx.fillText('PWR', mx + 7, mt + mh + 16)
+      ctx.fillText('POWER', mx + mw / 2, mt + mh + 18)
     }
 
     // ---------------- input ----------------
