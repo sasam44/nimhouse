@@ -226,6 +226,64 @@ function drawCone(ctx, x, y, s) {
   ctx.restore()
 }
 
+function triPath(ctx, x, yTop, halfW, yBot) {
+  ctx.beginPath()
+  ctx.moveTo(x, yTop)
+  ctx.lineTo(x - halfW, yBot)
+  ctx.lineTo(x + halfW, yBot)
+  ctx.closePath()
+  ctx.fill()
+}
+
+function drawTree(ctx, x, y, s, variant) {
+  if (s < 0.06) return
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(s, s)
+  ctx.fillStyle = 'rgba(0,0,0,0.16)'
+  ctx.beginPath()
+  ctx.ellipse(0, 1, 22, 5.5, 0, 0, Math.PI * 2)
+  ctx.fill()
+  if (variant === 0) {
+    // trunk
+    ctx.fillStyle = '#a8672f'
+    rr(ctx, -4.5, -24, 9, 26, 3)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'
+    ctx.lineWidth = 1.6
+    rr(ctx, -4.5, -24, 9, 26, 3)
+    ctx.stroke()
+    // leafy canopy
+    ctx.fillStyle = '#3fae4e'
+    ctx.beginPath()
+    ctx.arc(-10, -30, 12, 0, Math.PI * 2)
+    ctx.arc(10, -30, 12, 0, Math.PI * 2)
+    ctx.arc(0, -40, 14, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'
+    ctx.lineWidth = 1.6
+    ctx.stroke()
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'
+    ctx.beginPath()
+    ctx.arc(-6, -44, 5.5, 0, Math.PI * 2)
+    ctx.fill()
+  } else {
+    // pine
+    ctx.fillStyle = '#8d5524'
+    rr(ctx, -3.5, -14, 7, 16, 2)
+    ctx.fill()
+    ctx.fillStyle = '#2f9e54'
+    triPath(ctx, 0, -46, 15, -22)
+    triPath(ctx, 0, -38, 19, -14)
+    triPath(ctx, 0, -28, 23, -6)
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)'
+    ctx.lineWidth = 1.4
+    triPath(ctx, 0, -38, 19, -14)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
 function drawObstacle(ctx, o, t) {
   const p = o.p
   const x = laneX(o.lane, p)
@@ -293,6 +351,21 @@ export default function NimRush({ skin, player, onExit, onScore, requestVerify, 
       deadAt: 0,
       shake: 0,
       lastShown: -1,
+      trees: [],
+    }
+
+    function makeTree(p) {
+      return {
+        side: Math.random() < 0.5 ? -1 : 1,
+        off: 18 + Math.random() * 42,
+        p,
+        size: 0.8 + Math.random() * 0.6,
+        variant: Math.random() < 0.7 ? 0 : 1,
+      }
+    }
+    st.trees = []
+    for (let i = 0; i < 11; i++) {
+      st.trees.push(makeTree((i / 11) * 1.2 + Math.random() * 0.05))
     }
 
     function start() {
@@ -349,6 +422,10 @@ export default function NimRush({ skin, player, onExit, onScore, requestVerify, 
       st.dist = 0
       st.passBonus = 0
       st.obstacles = []
+      st.trees = []
+      for (let i = 0; i < 11; i++) {
+        st.trees.push(makeTree((i / 11) * 1.2 + Math.random() * 0.05))
+      }
       st.spawnT = 0
       st.spawnI = 0
       st.offset = Math.floor(Math.random() * 3)
@@ -405,6 +482,13 @@ export default function NimRush({ skin, player, onExit, onScore, requestVerify, 
           }
         }
         st.obstacles = st.obstacles.filter((o) => o.p < 1.15)
+
+        // trees scroll with the road, recycle at the horizon
+        for (const tr of st.trees) {
+          tr.p += speed * (dt / 60)
+          if (tr.p > 1.2) Object.assign(tr, makeTree(tr.p - 1.2))
+        }
+
         const shown = Math.floor(st.dist) + st.passBonus
         if (shown !== st.lastShown) {
           st.lastShown = shown
@@ -454,41 +538,70 @@ export default function NimRush({ skin, player, onExit, onScore, requestVerify, 
       ctx.fillStyle = '#7ed957'
       ctx.fillRect(-12, HORIZON + 8, W + 24, H - HORIZON)
 
-      // road
+      // road (extended past the bottom edge so nothing clips)
+      const P_MAX = 1.25
       ctx.fillStyle = '#6d7686'
       ctx.beginPath()
       ctx.moveTo(W / 2 - roadHalf(0), screenY(0))
       ctx.lineTo(W / 2 + roadHalf(0), screenY(0))
-      ctx.lineTo(W / 2 + roadHalf(1) + 18, H)
-      ctx.lineTo(W / 2 - roadHalf(1) - 18, H)
+      ctx.lineTo(W / 2 + roadHalf(P_MAX), screenY(P_MAX))
+      ctx.lineTo(W / 2 - roadHalf(P_MAX), screenY(P_MAX))
       ctx.closePath()
       ctx.fill()
 
-      // scrolling rumble strips (edges) + lane dashes
+      // perspective-correct scrolling segments: rumble strips + lane dashes
+      const SEG = 24
       const scroll = st.dist * 0.55
-      for (let i = 0; i < 26; i++) {
-        const p = i / 26
-        if (Math.floor(p * 22 + scroll) % 2 !== 0) continue
-        const y = screenY(p)
-        const rw = 9 * scaleOf(p) + 2
-        ctx.fillStyle = i % 4 < 2 ? '#ef476f' : '#ffffff'
+      const off = scroll % 1
+      for (let i = 0; i < SEG; i++) {
+        const p0 = Math.max(0, (i - off) / SEG)
+        const p1 = Math.min(P_MAX, (i + 1 - off) / SEG)
+        if (p1 - p0 < 0.002) continue
+        const y0 = screenY(p0)
+        const y1 = screenY(p1)
+        const k = i + Math.floor(scroll)
+        // rumble strips on both road edges (alternating red/white)
+        ctx.fillStyle = k % 2 === 0 ? '#ef476f' : '#ffffff'
         for (const side of [-1, 1]) {
-          const inner = W / 2 + side * roadHalf(p)
-          const outer = W / 2 + side * (roadHalf(p) + rw)
+          const in0 = W / 2 + side * roadHalf(p0)
+          const in1 = W / 2 + side * roadHalf(p1)
+          const w0 = 10 * scaleOf(p0) + 2
+          const w1 = 10 * scaleOf(p1) + 2
+          const out0 = W / 2 + side * (roadHalf(p0) + w0)
+          const out1 = W / 2 + side * (roadHalf(p1) + w1)
           ctx.beginPath()
-          ctx.moveTo(inner, y)
-          ctx.lineTo(outer, y)
-          ctx.lineTo(outer, y + 12)
-          ctx.lineTo(inner, y + 12)
+          ctx.moveTo(in0, y0)
+          ctx.lineTo(out0, y0)
+          ctx.lineTo(out1, y1)
+          ctx.lineTo(in1, y1)
           ctx.closePath()
           ctx.fill()
         }
-        // lane boundary dashes
-        ctx.fillStyle = 'rgba(255,255,255,0.75)'
-        for (const side of [-1, 1]) {
-          const cx = W / 2 + side * (roadHalf(p) / 3)
-          ctx.fillRect(cx - 2 * scaleOf(p), y, 4 * scaleOf(p), 11)
+        // dashed lane boundary lines
+        if (k % 2 === 0) {
+          ctx.fillStyle = 'rgba(255,255,255,0.78)'
+          for (const side of [-1, 1]) {
+            const c0 = W / 2 + side * (roadHalf(p0) / 3)
+            const c1 = W / 2 + side * (roadHalf(p1) / 3)
+            const dw0 = 4.5 * scaleOf(p0) + 1
+            const dw1 = 4.5 * scaleOf(p1) + 1
+            ctx.beginPath()
+            ctx.moveTo(c0 - dw0, y0)
+            ctx.lineTo(c0 + dw0, y0)
+            ctx.lineTo(c1 + dw1, y1)
+            ctx.lineTo(c1 - dw1, y1)
+            ctx.closePath()
+            ctx.fill()
+          }
         }
+      }
+
+      // roadside trees (far first, perspective scaled)
+      const trees = [...st.trees].sort((a, b) => a.p - b.p)
+      for (const tr of trees) {
+        const s = scaleOf(tr.p) * tr.size
+        const x = W / 2 + tr.side * (roadHalf(tr.p) + 24 + tr.off * (0.4 + 0.6 * tr.p))
+        drawTree(ctx, x, screenY(tr.p), s, tr.variant)
       }
 
       // obstacles (far first)
@@ -523,8 +636,9 @@ export default function NimRush({ skin, player, onExit, onScore, requestVerify, 
       if (e.target.closest && e.target.closest('button')) return
       e.preventDefault()
       const rect = canvas.getBoundingClientRect()
-      const cx = (e.clientX ?? rect.width / 2) - rect.left
-      steer(cx < rect.width / 2 ? -1 : 1)
+      const rw = rect.width || 1
+      const cx = (e.clientX ?? rw / 2) - rect.left
+      steer(cx / rw < 0.5 ? -1 : 1)
     }
     stage.addEventListener('pointerdown', onPointer)
     const onKey = (e) => {

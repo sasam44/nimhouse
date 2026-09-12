@@ -327,7 +327,13 @@ export default function NimSwat({ player, onExit, onScore, requestVerify, wallet
       if (e.target.closest && e.target.closest('button')) return
       e.preventDefault()
       const rect = canvas.getBoundingClientRect()
-      swat((e.clientX ?? 0) - rect.left, (e.clientY ?? 0) - rect.top)
+      const rw = rect.width || 1
+      const rh = rect.height || 1
+      // map CSS pointer position → internal canvas resolution (360x600),
+      // so the swatter lands exactly where the finger tapped
+      const x = (((e.clientX ?? rw / 2) - rect.left) / rw) * W
+      const y = (((e.clientY ?? rh / 2) - rect.top) / rh) * H
+      swat(x, y)
     }
     stage.addEventListener('pointerdown', onPointer)
     const onKey = (e) => {
