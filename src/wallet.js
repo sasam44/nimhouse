@@ -25,7 +25,7 @@ function randomHex(bytes = 32) {
  * fake data after a short delay so the whole app stays testable.
  */
 function createDemoNimiq() {
-  const address = 'NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ00 00'
+  const address = 'NQ71 4NIMHO USE0 0000 0000 0000 0000 00'
   return {
     _demo: true,
     demoAddress: address,
