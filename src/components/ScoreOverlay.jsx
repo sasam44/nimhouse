@@ -113,7 +113,7 @@ export default function ScoreOverlay({
       )}
       {cupDone && (
         <div className="cup-line ok">
-          🏆 Cup entry saved · {cupDone} <span>(top 3 per game take today's pool)</span>
+          🏆 Cup entry saved · {cupDone} <span>(top 3 per game take this cup's pool)</span>
         </div>
       )}
       {cupErr && <div className="cup-line err">{cupErr}</div>}

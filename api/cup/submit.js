@@ -1,18 +1,18 @@
 /**
- * POST /api/cup/submit — enter the daily Cup with a wallet-signed score.
+ * POST /api/cup/submit — enter the current 3-day Cup with a wallet-signed score.
  *
- * Body: { game, day, score, name, device, address, message, publicKey, signature }
+ * Body: { game, period, score, name, device, address, message, publicKey, signature }
  *
  * Anti-fraud (documented trust model):
  *  1. The message is verified as a real ed25519 wallet signature (the holder
  *     of that keypair must have approved the claim).
- *  2. One entry per device per game per day (device = Nimiq device identifier).
+ *  2. One entry per device per game per cup period.
  *  3. Highest score per device wins (replays are free).
  */
 import crypto from 'node:crypto'
 import { keccak256 } from 'js-sha3'
 import { writeCup } from '../lib/store.js'
-import { GAMES } from '../cup.js'
+import { GAMES, cupPeriod } from '../cup.js'
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -24,15 +24,22 @@ export default async function handler(req, res) {
   }
   const bad = (error) => res.status(400).json({ ok: false, error })
   try {
-    const { game, day, score, name, device, address, message, publicKey, signature } = req.body || {}
+    const { game, period, score, name, device, address, message, publicKey, signature } =
+      req.body || {}
 
     if (!GAMES.includes(game)) return bad('unknown game')
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day || '')) return bad('bad day')
+    if (!/^P\d+$/.test(period || '')) return bad('bad period')
+    if (period !== cupPeriod().id) return bad('cup period closed')
     const s = Math.floor(Number(score))
     if (!Number.isFinite(s) || s < 0 || s > 1_000_000) return bad('bad score')
     if (!/^[0-9a-f]{64}$/i.test(device || '')) return bad('bad device id')
     if (!publicKey || !signature || typeof message !== 'string') return bad('missing signature')
-    if (!message.includes(`score=${s}`) || !message.includes(`game=${game}`)) return bad('message/score mismatch')
+    if (
+      !message.includes(`score=${s}`) ||
+      !message.includes(`game=${game}`) ||
+      !message.includes(`period=${period}`)
+    )
+      return bad('message/score mismatch')
 
     // Nimiq wallet signs keccak256(message) with ed25519.
     const msgHash = Buffer.from(keccak256(message))
@@ -50,8 +57,8 @@ export default async function handler(req, res) {
     if (!okSig) return bad('signature invalid')
 
     const next = await writeCup((data) => {
-      const byDay = (data.entries[game] = data.entries[game] || {})
-      const list = byDay[day] || (byDay[day] = [])
+      const byPeriod = (data.entries[game] = data.entries[game] || {})
+      const list = byPeriod[period] || (byPeriod[period] = [])
       const entry = {
         device,
         name: String(name || 'Anonymous').slice(0, 24),
@@ -68,10 +75,10 @@ export default async function handler(req, res) {
       return data
     })
 
-    const list = next.entries[game][day]
+    const list = next.entries[game][period]
     const top = [...list].sort((a, b) => b.score - a.score)
     const rank = top.findIndex((e) => e.device === device) + 1
-    res.json({ ok: true, rank, score: s })
+    res.json({ ok: true, rank, score: s, period })
   } catch (e) {
     if (/cup-not-configured|cup-write-conflict/.test(e.message)) {
       res.status(503).json({ ok: false, error: 'cup is being set up — try again shortly' })

@@ -746,3 +746,10 @@ canvas.game {
 .cup-line.err {
   color: var(--red);
 }
+.cup-period {
+  color: var(--dim);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-transform: none;
+}

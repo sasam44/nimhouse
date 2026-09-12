@@ -130,6 +130,22 @@ const CUP_NAMES = {
   hop: 'NimHop',
 }
 
+/** 3-day cup periods (UTC) — must stay in sync with api/cup.js */
+function cupPeriod(date = new Date()) {
+  const days = Math.floor(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000
+  )
+  const p = Math.floor(days / 3)
+  const start = new Date(p * 3 * 86400000)
+  const end = new Date((p + 1) * 3 * 86400000)
+  return {
+    id: `P${p}`,
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
+    daysLeft: Math.max(1, Math.ceil((end - date) / 86400000)),
+  }
+}
+
 function CupCard({ tick }) {
   const [cup, setCup] = useState(null)
   const [failed, setFailed] = useState(false)
@@ -158,11 +174,18 @@ function CupCard({ tick }) {
   const walletReady = pool?.wallet && !/PENDING/.test(pool.wallet)
   return (
     <div className="card cup-card">
-      <h3>🏆 NimHouse Cup — daily</h3>
+      <h3>
+        🏆 NimHouse Cup — {cup?.period?.id || '…'}
+        {cup?.period && (
+          <span className="cup-period">
+            {' '}
+            · closes {cup.period.end} ({cup.period.daysLeft}d left)
+          </span>
+        )}
+      </h3>
       <p className="cup-pool">
-        {pool?.perGameDailyNim ?? 100} NIM per game · top 3 take{' '}
-        {pool?.splitPct?.join(' / ') ?? '50 / 30 / 20'}% · staked daily by the{' '}
-        <b>NimHouse wallet</b>
+        {pool?.perGameDailyNim ?? 100} NIM per game per 3-day cup · top 3 take{' '}
+        {pool?.splitPct?.join(' / ') ?? '50 / 30 / 20'}% · staked by the <b>NimHouse wallet</b>
         {walletReady && <span className="cup-wallet"> · {pool.wallet.slice(0, 6)}…{pool.wallet.slice(-4)}</span>}
       </p>
       {cup ? (
@@ -195,8 +218,9 @@ function CupCard({ tick }) {
       )}
       <p className="cup-note">
         Free to play · no entry fee, no gambling. Finish any game → <b>Enter the NimHouse Cup</b>{' '}
-        (signs with your Nimiq wallet). One entry per device per game per day — best score
-        counts. Pool, entries &amp; payouts are public in the open-source repo.
+        (signs with your Nimiq wallet). One entry per device per game per 3-day cup — best score
+        counts. Top 3 per game get paid on-chain at the end of each cup. Pool, entries &amp;
+        payouts are public in the open-source repo.
       </p>
     </div>
   )
@@ -326,15 +350,15 @@ export default function App() {
 
   async function cupSubmit(game, score) {
     if (!wallet || wallet.mode === 'demo') return { ok: false, error: 'Open inside Nimiq Pay to enter the Cup' }
-    const day = new Date().toISOString().slice(0, 10)
+    const period = cupPeriod()
     try {
       const device = await getDeviceId()
-      const message = `NimHouse Cup | game=${game} | day=${day} | score=${Math.floor(score)} | device=${device}`
+      const message = `NimHouse Cup | game=${game} | period=${period.id} | score=${Math.floor(score)} | device=${device}`
       const res = await wallet.nimiq.sign(message)
       if (res && res.error) return { ok: false, error: res.error.message || 'Signing rejected' }
       const body = {
         game,
-        day,
+        period: period.id,
         score: Math.floor(score),
         name: player || 'Anonymous',
         device,

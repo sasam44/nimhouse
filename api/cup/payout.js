@@ -3,7 +3,7 @@
  * The NimHouse wallet sends the NIM first, then this marks the tx hash so the
  * UI can show "paid ✓". Protected by the CUP_ADMIN_SECRET header.
  *
- * Body: { game, day, rank (1|2|3), tx }
+ * Body: { game, period, rank (1|2|3), tx }
  */
 import { writeCup } from '../lib/store.js'
 import { GAMES } from '../cup.js'
@@ -21,16 +21,16 @@ export default async function handler(req, res) {
     return
   }
   try {
-    const { game, day, rank, tx } = req.body || {}
+    const { game, period, rank, tx } = req.body || {}
     if (!GAMES.includes(game)) return res.status(400).json({ ok: false, error: 'unknown game' })
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day || '')) return res.status(400).json({ ok: false, error: 'bad day' })
+    if (!/^P\d+$/.test(period || '')) return res.status(400).json({ ok: false, error: 'bad period' })
     if (![1, 2, 3].includes(Number(rank))) return res.status(400).json({ ok: false, error: 'bad rank' })
     if (!tx) return res.status(400).json({ ok: false, error: 'missing tx hash' })
 
     await writeCup((data) => {
       const byGame = (data.payouts[game] = data.payouts[game] || {})
-      const byDay = byGame[day] || (byGame[day] = {})
-      byDay[String(rank)] = String(tx).slice(0, 128)
+      const byPeriod = byGame[period] || (byGame[period] = {})
+      byPeriod[String(rank)] = String(tx).slice(0, 128)
       return data
     })
     res.json({ ok: true })
