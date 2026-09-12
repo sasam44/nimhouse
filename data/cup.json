@@ -13,15 +13,7 @@
   },
   "entries": {
     "chick": {
-      "P6902": [
-        {
-          "device": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-          "name": "APITest",
-          "score": 1234,
-          "address": "NQ71 4NIMHO USE0 0000 0000 0000 0000 00",
-          "ts": 1789242717366
-        }
-      ]
+      "P6902": []
     }
   },
   "payouts": {}
