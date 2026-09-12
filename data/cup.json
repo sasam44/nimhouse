@@ -44,6 +44,10 @@
     }
   },
   "payouts": {
-    "chick": {}
+    "chick": {
+      "P6901": {
+        "1": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      }
+    }
   }
 }
