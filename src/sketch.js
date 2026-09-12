@@ -324,6 +324,43 @@ export function drawBlock3D(ctx, x, y, w, hue, h = 26, squash = 0) {
   ctx.strokeRect(x + 0.5, yTop + 0.5, w - 1, hh - 1)
 }
 
+/** Mini dartboard with a dart in the bullseye (NimBullseye card thumbnail). */
+export function drawBoardPreview(ctx, w, h, dartSkin) {
+  ctx.clearRect(0, 0, w, h)
+  const cx = w / 2
+  const cy = h / 2 - 2
+  const R = 28
+  // wooden frame
+  const wood = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R)
+  wood.addColorStop(0, '#b06a2c')
+  wood.addColorStop(1, '#6e3f16')
+  ctx.fillStyle = wood
+  ctx.beginPath()
+  ctx.arc(cx, cy, R + 4, 0, Math.PI * 2)
+  ctx.fill()
+  const mini = [
+    { r: 28, c: '#2f3542' },
+    { r: 23, c: '#ef476f' },
+    { r: 17.5, c: '#06d6a0' },
+    { r: 12, c: '#ef476f' },
+    { r: 6.5, c: '#06d6a0' },
+    { r: 3, c: '#ffd60a' },
+  ]
+  for (const r of mini) {
+    ctx.fillStyle = r.c
+    ctx.beginPath()
+    ctx.arc(cx, cy, r.r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // dome highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.16)'
+  ctx.beginPath()
+  ctx.arc(cx - 7, cy - 9, R * 0.72, 0, Math.PI * 2)
+  ctx.fill()
+  // dart pinned in the bullseye (tip at center)
+  if (dartSkin) drawDart(ctx, cx, cy + 24 * 0.55, 0, dartSkin, 0.55)
+}
+
 /** Small stack of blocks (card / skin thumbnail). */
 export function drawStackPreview(ctx, hue, w, h) {
   ctx.clearRect(0, 0, w, h)

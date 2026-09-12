@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getWallet, CHEER_ADDRESS, LUNA_PER_NIM, fmtNim, shortHash } from './wallet'
 import { SKIN_GROUPS } from './skins'
-import { drawChicken, drawDart, drawStackPreview } from './sketch'
+import { drawChicken, drawDart, drawStackPreview, drawBoardPreview } from './sketch'
 import { loadLB, bestScore, markVerified } from './leaderboard'
 import { sfx } from './sound'
 import NimChick from './games/NimChick'
@@ -26,7 +26,7 @@ const GAMES = [
   {
     id: 'bull',
     name: 'NimBullseye',
-    blurb: 'The aim sways, the power oscillates. Release in the green band. Five darts a round.',
+    blurb: 'The dart lands exactly where your crosshair is. Ride the sway — green power = PERFECT ×2.',
     how: 'hold + release',
     lbLabel: 'Bullseye',
   },
@@ -54,7 +54,7 @@ function Logo() {
   )
 }
 
-function GameThumb({ kind, skin }) {
+function GameThumb({ kind, skin, dartSkin }) {
   const ref = useRef(null)
   useEffect(() => {
     const c = ref.current
@@ -62,9 +62,9 @@ function GameThumb({ kind, skin }) {
     const ctx = c.getContext('2d')
     ctx.clearRect(0, 0, 76, 76)
     if (kind === 'chick') drawChicken(ctx, 36, 46, 1.05, skin, 0.6, 0.9)
-    else if (kind === 'dart') drawDart(ctx, 36, 42, Math.PI / 2, skin, 1.5)
-    else drawStackPreview(ctx, skin?.hue ?? 158, 76, 76)
-  }, [kind, skin])
+    else if (kind === 'stack') drawStackPreview(ctx, skin?.hue ?? 158, 76, 76)
+    else drawBoardPreview(ctx, 76, 76, dartSkin)
+  }, [kind, skin, dartSkin])
   return <canvas ref={ref} className="game-thumb" width={76} height={76} />
 }
 
@@ -424,7 +424,11 @@ export default function App() {
         <div className="games-list">
           {GAMES.map((g) => (
             <div className="game-card" key={g.id}>
-              <GameThumb kind={g.id} skin={g.id === 'chick' ? chickSkin : undefined} />
+              <GameThumb
+                kind={g.id}
+                skin={g.id === 'chick' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
+                dartSkin={dartSkin}
+              />
               <div className="game-info">
                 <div className="name">{g.name}</div>
                 <div className="blurb">{g.blurb}</div>

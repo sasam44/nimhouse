@@ -178,13 +178,16 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         if (st.fly.t >= 1) {
           const x = st.fly.toX
           const y = st.fly.toY
-          const pts = ringPts(x, y)
-          st.thrown.push({ x, y, pts })
+          const basePts = ringPts(x, y)
+          const perfect = st.fly.perfect
+          const pts = perfect ? basePts * 2 : basePts
+          st.thrown.push({ x, y, pts, perfect })
           st.total += pts
           st.darts -= 1
-          st.float = { x, y, pts, t: 0 }
+          st.float = { x, y, pts, perfect, t: 0 }
           st.fly = null
-          sfx.thud()
+          if (perfect && basePts > 0) sfx.win()
+          else sfx.thud()
           setScore(st.total)
           if (st.darts <= 0) finish()
         }
@@ -326,17 +329,17 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       if (st.float) {
         const f = st.float
         const alpha = Math.max(0, 1 - f.t / 70)
-        const size = f.t < 10 ? 18 + f.t * 1.6 : 34
+        const size = f.t < 10 ? 18 + f.t * 1.6 : f.perfect ? 30 : 34
         ctx.globalAlpha = alpha
         ctx.font = `800 ${size}px system-ui, sans-serif`
         ctx.textAlign = 'center'
         ctx.lineWidth = 5
         ctx.lineJoin = 'round'
         ctx.strokeStyle = 'rgba(255,255,255,0.9)'
-        const label = f.pts === 0 ? 'MISS' : `+${f.pts}`
+        const label = f.pts === 0 ? 'MISS' : f.perfect ? `PERFECT +${f.pts}` : `+${f.pts}`
         const ly = f.y - 26 - f.t * 0.6
         ctx.strokeText(label, f.x, ly)
-        ctx.fillStyle = f.pts >= 25 ? '#ffd60a' : f.pts === 0 ? '#ff5d5d' : '#2b6cb0'
+        ctx.fillStyle = f.perfect ? '#ffd60a' : f.pts === 0 ? '#ff5d5d' : '#2b6cb0'
         ctx.fillText(label, f.x, ly)
         ctx.globalAlpha = 1
       }
@@ -448,10 +451,11 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
             <div className="panel">
               <h2>NimBullseye</h2>
               <p className="panel-sub">
-                The aim sways, the power oscillates. Hold to charge, release in the green band. Five
-                darts per round — pure feel.
+                The dart lands exactly where your crosshair is. Ride the sway, release on your ring.
+                Release in the <b style={{ color: 'var(--green)' }}>green band</b> for a PERFECT throw
+                (2× points). Five darts per round.
               </p>
-              <p className="panel-hint">HOLD to charge · RELEASE to throw</p>
+              <p className="panel-hint">HOLD to charge · RELEASE on your ring</p>
             </div>
           </div>
         )}

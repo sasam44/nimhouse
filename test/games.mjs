@@ -111,7 +111,7 @@ await sleep(800)
 check('NimBullseye round ends with game-over overlay', document.body.textContent.includes('Play again'))
 const bullLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.bull') || '[]')
 check('NimBullseye score recorded', bullLb.length > 0)
-check('bullseye score within possible range (0..250)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 250)
+check('bullseye score within possible range (0..500)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 500)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)
