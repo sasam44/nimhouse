@@ -174,6 +174,26 @@ check('NimSlice ends after 3 escapes', over)
 const sliceLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.slice') || '[]')
 check('NimSlice score recorded', sliceLb.length > 0)
 check('slice score is a multiple of 5', sliceLb.length > 0 && sliceLb[0].score % 5 === 0)
+await backToHub()
+
+// ---------- NimHop ----------
+// No steering in jsdom → chick bounces until a platform is off-center → falls → game over.
+// Tower layout is fixed-seed, so the outcome is deterministic.
+await openGame(6)
+check('NimHop ready overlay', document.body.textContent.includes('HOLD ◀ ▶ or DRAG to steer'))
+view = stage()
+const hDown = new window.Event('pointerdown', { bubbles: true })
+Object.defineProperty(hDown, 'clientX', { value: 180 })
+Object.defineProperty(hDown, 'clientY', { value: 400 })
+view.dispatchEvent(hDown)
+const hUp = new window.Event('pointerup', { bubbles: true })
+window.dispatchEvent(hUp)
+await sleep(12000) // a few bounces then fall off the bottom
+over = document.body.textContent.includes('Play again')
+check('NimHop ends when the chick falls', over)
+const hopLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.hop') || '[]')
+check('NimHop score recorded', hopLb.length > 0)
+check('hop height is a non-negative integer', hopLb.length > 0 && Number.isInteger(hopLb[0].score) && hopLb[0].score >= 0)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)

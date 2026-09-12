@@ -1,7 +1,8 @@
 # 🐔 NimHouse
 
-**Skill-based mini games inside Nimiq Pay.** One house, six games, real NIM integration — and zero
-gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompetition.com) (Cycle II).
+**Skill-based mini games inside Nimiq Pay.** One house, seven games, real NIM integration — and
+zero gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompetition.com)
+(Cycle II).
 
 | Game | Loop | Skill |
 | --- | --- | --- |
@@ -11,6 +12,7 @@ gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompetitio
 | **NimRush** | Pseudo-3D chicken runner — weave through cows, UFOs, giant sausages | reflexes |
 | **NimSwat** | One angry mustachioed fly; tap it before it gets too fast (5 misses = escape) | moving-target accuracy |
 | **NimSlice** | Sausage volleys fly up the screen — swipe to slice them all (3 escapes = over) | swipe timing |
+| **NimHop** | Doodle-Jump style — steer a bouncing chick up an endless, fixed-seed platform tower | platforming & wrap reflexes |
 
 ## Why NimHouse
 
@@ -84,6 +86,7 @@ src/
   games/NimRush.jsx       pseudo-3D lane-dodge runner
   games/NimSwat.jsx       moving-target swatter
   games/NimSlice.jsx      swipe-slicing sausage volley (portrait-friendly)
+  games/NimHop.jsx        endless platform hopper (fixed-seed tower, wrap-around)
   components/ScoreOverlay.jsx  shared round-over + verify flow
 ```
 

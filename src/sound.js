@@ -3,6 +3,12 @@
  * The AudioContext is created lazily on the first user gesture.
  */
 let ctx = null
+let muted = false
+
+export const setMuted = (m) => {
+  muted = m
+}
+export const isMuted = () => muted
 
 function audio() {
   if (typeof window === 'undefined') return null
@@ -18,6 +24,7 @@ function audio() {
 }
 
 function beep(freq = 440, dur = 0.08, type = 'square', vol = 0.05, slideTo = 0) {
+  if (muted) return
   const c = audio()
   if (!c) return
   try {

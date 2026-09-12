@@ -9,6 +9,7 @@ import {
   drawRushPreview,
   drawSwatPreview,
   drawSlicePreview,
+  drawHopPreview,
 } from './sketch'
 import { loadLB, bestScore, markVerified } from './leaderboard'
 import { sfx } from './sound'
@@ -18,6 +19,7 @@ import NimBullseye from './games/NimBullseye'
 import NimRush from './games/NimRush'
 import NimSwat from './games/NimSwat'
 import NimSlice from './games/NimSlice'
+import NimHop from './games/NimHop'
 
 const GAMES = [
   {
@@ -62,6 +64,13 @@ const GAMES = [
     how: 'swipe to slice',
     lbLabel: 'Slice',
   },
+  {
+    id: 'hop',
+    name: 'NimHop',
+    blurb: 'Steer your bouncing chick up an endless tower of platforms. Hold, wrap, climb.',
+    how: 'hold arrows / drag',
+    lbLabel: 'Hop',
+  },
 ]
 
 const shortAddr = (a) => {
@@ -98,6 +107,7 @@ function GameThumb({ kind, skin, dartSkin }) {
     else if (kind === 'bull') drawBoardPreview(ctx, 76, 76, dartSkin)
     else if (kind === 'rush') drawRushPreview(ctx, 76, 76, skin)
     else if (kind === 'swat') drawSwatPreview(ctx, 76, 76)
+    else if (kind === 'hop') drawHopPreview(ctx, 76, 76, skin)
     else drawSlicePreview(ctx, 76, 76, skin)
   }, [kind, skin, dartSkin])
   return <canvas ref={ref} className="game-thumb" width={76} height={76} />
@@ -319,7 +329,8 @@ export default function App() {
       bull: bestScore('bull'),
       rush: bestScore('rush'),
       swat: bestScore('swat'),
-      cannon: bestScore('cannon'),
+      slice: bestScore('slice'),
+      hop: bestScore('hop'),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [view, lbTick]
@@ -390,6 +401,14 @@ export default function App() {
     return (
       <>
         <NimSlice skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('slice', id)} />
+        {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
+      </>
+    )
+  }
+  if (view === 'hop') {
+    return (
+      <>
+        <NimHop skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('hop', id)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -492,7 +511,7 @@ export default function App() {
             <div className="game-card" key={g.id}>
               <GameThumb
                 kind={g.id}
-                skin={g.id === 'chick' || g.id === 'rush' || g.id === 'slice' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
+                skin={g.id === 'chick' || g.id === 'rush' || g.id === 'slice' || g.id === 'hop' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
                 dartSkin={dartSkin}
               />
               <div className="game-info">

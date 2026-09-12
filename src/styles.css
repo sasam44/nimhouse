@@ -603,3 +603,51 @@ canvas.game {
     transform: rotate(360deg);
   }
 }
+
+/* NimHop on-screen steer buttons + sound toggle */
+.hopbtn {
+  position: absolute;
+  bottom: 18px;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  border: 3px solid rgba(60, 100, 120, 0.55);
+  color: #2b4a5a;
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 5;
+  cursor: pointer;
+}
+.hopbtn:active {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(0.95);
+}
+.hudbtn {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  border: 2.5px solid rgba(60, 100, 120, 0.55);
+  font-size: 17px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  z-index: 5;
+  cursor: pointer;
+}
+.hudbtn:active {
+  background: rgba(255, 255, 255, 0.9);
+}

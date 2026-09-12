@@ -652,6 +652,56 @@ export function drawSlicePreview(ctx, w, h, skin) {
   drawChicken(ctx, w * 0.16, h * 0.84, 0.62, skin, 0.6, 2, 0.05)
 }
 
+/** Teal platforms + bouncing chicken + spring (NimHop thumbnail). */
+export function drawHopPreview(ctx, w, h, skin) {
+  ctx.clearRect(0, 0, w, h)
+  // sky
+  const sky = ctx.createLinearGradient(0, 0, 0, h)
+  sky.addColorStop(0, '#bfeaff')
+  sky.addColorStop(1, '#eefaff')
+  ctx.fillStyle = sky
+  ctx.fillRect(0, 0, w, h)
+  drawSun(ctx, w * 0.78, h * 0.16, 9)
+  // platforms (stair-step upward)
+  const plats = [
+    { x: w * 0.3, y: h * 0.82 },
+    { x: w * 0.62, y: h * 0.62 },
+    { x: w * 0.32, y: h * 0.4 },
+    { x: w * 0.66, y: h * 0.2 },
+  ]
+  for (const p of plats) {
+    ctx.fillStyle = '#3d8ba1'
+    rr(ctx, p.x - 13, p.y, 26, 6, 3)
+    ctx.fill()
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'
+    rr(ctx, p.x - 11, p.y + 1, 22, 2, 1)
+    ctx.fill()
+  }
+  // spring on the third platform
+  const sp = plats[2]
+  ctx.strokeStyle = '#cdd5de'
+  ctx.lineWidth = 1.4
+  ctx.beginPath()
+  ctx.moveTo(sp.x - 4, sp.y - 3)
+  ctx.lineTo(sp.x + 4, sp.y - 6)
+  ctx.moveTo(sp.x - 4, sp.y - 6)
+  ctx.lineTo(sp.x + 4, sp.y - 9)
+  ctx.stroke()
+  ctx.fillStyle = '#e63946'
+  rr(ctx, sp.x - 5, sp.y - 4, 10, 4, 1.5)
+  ctx.fill()
+  // upward dotted arc
+  ctx.fillStyle = 'rgba(43,108,176,0.75)'
+  for (let i = 1; i <= 4; i++) {
+    const t = i / 4
+    ctx.beginPath()
+    ctx.arc(w * 0.2 + t * w * 0.14, h * 0.72 - Math.sin(t * Math.PI * 0.8) * h * 0.22, 2, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // chicken mid-bounce on platform 1
+  drawChicken(ctx, plats[0].x, plats[0].y - 12, 0.62, skin, 0.6, 2.4, -0.15)
+}
+
 /** Fly + swatter + BONK (NimSwat thumbnail). */
 export function drawSwatPreview(ctx, w, h) {
   ctx.clearRect(0, 0, w, h)

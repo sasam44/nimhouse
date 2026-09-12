@@ -9,7 +9,7 @@
 
 ## 1. Description (≤250 words) — paste this into the portal
 
-> NimHouse is a skill-based mini game house inside Nimiq Pay, bundling six original games: NimChick (absurd flapper), NimStack (floating blocks, drop precision), NimBullseye (swaying crosshair darts with PERFECT ×2), NimRush (pseudo-3D chicken runner), NimSwat (the angry mustachioed fly), and NimSlice (swipe-slicing sausage volleys). Every game is 100% player skill — no entry fees, no betting, no chance-based outcomes.
+> NimHouse is a skill-based mini game house inside Nimiq Pay, bundling seven original games: NimChick (absurd flapper), NimStack (floating blocks, drop precision), NimBullseye (swaying crosshair darts with PERFECT ×2), NimRush (pseudo-3D chicken runner), NimSwat (the angry mustachioed fly), NimSlice (swipe-slicing sausage volleys), and NimHop (endless platform hopper). Every game is 100% player skill — no entry fees, no betting, no chance-based outcomes.
 >
 > Nimiq Pay is wired into the core experience, not the footer. Players connect their wallet, watch live consensus and block status, buy cosmetic-only skins by paying NIM through Nimiq Pay transactions with on-chain purchase notes, cheer players with NIM tips and on-chain messages, and earn a verified badge by signing a tamper-proof score record with their wallet. A per-device leaderboard tracks the best runs; wallet-verified entries stand out.
 >
