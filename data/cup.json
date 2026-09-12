@@ -16,5 +16,11 @@
       "P6902": []
     }
   },
-  "payouts": {}
+  "payouts": {
+    "chick": {
+      "P6902": {
+        "1": "0xPAYOUTTEST"
+      }
+    }
+  }
 }
