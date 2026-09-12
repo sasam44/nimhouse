@@ -87,6 +87,7 @@ src/
   games/NimSwat.jsx       moving-target swatter
   games/NimSlice.jsx      swipe-slicing sausage volley (portrait-friendly)
   games/NimHop.jsx        endless platform hopper (fixed-seed tower, wrap-around)
+  assets/chick.png        official NimHouse chick sprite (all games + hub; procedural art remains as fallback)
   components/ScoreOverlay.jsx  shared round-over + verify flow
 ```
 

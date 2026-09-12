@@ -3,6 +3,135 @@
  * Bold outlines, gradients, highlights, soft shading. No game state here.
  */
 
+import chickUrl from './assets/chick.png'
+
+/**
+ * The official NimHouse chick sprite (user-provided art, transparent PNG).
+ * Loaded async; until it is ready we fall back to the procedural chicken so
+ * nothing ever renders empty (jsdom / first frame / offline).
+ */
+let chickSpriteReady = false
+const chickSprite = typeof Image !== 'undefined' ? new Image() : null
+if (chickSprite) {
+  chickSprite.onload = () => {
+    chickSpriteReady = true
+  }
+  chickSprite.src = chickUrl
+}
+
+export function chickSpriteIsReady() {
+  return chickSpriteReady
+}
+
+/** hex → hue (0..360) */
+function hexHue(hex) {
+  const h = (hex || '').replace('#', '')
+  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16)
+  const r = ((n >> 16) & 255) / 255
+  const g = ((n >> 8) & 255) / 255
+  const b = (n & 255) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  if (max === min) return 0
+  const d = max - min
+  let hue
+  if (max === r) hue = ((g - b) / d) % 6
+  else if (max === g) hue = (b - r) / d + 2
+  else hue = (r - g) / d + 4
+  return (hue * 60 + 360) % 360
+}
+
+/** The sprite body is saturated yellow (hue ≈ 52). Tint it toward the skin's wing hue. */
+function chickTint(skin) {
+  const wing = skin?.colors?.wing || '#ffd9a0'
+  let rot = Math.round(hexHue(wing) - 52)
+  if (rot > 180) rot -= 360
+  if (rot < -180) rot += 360
+  if (Math.abs(rot) < 12) return null
+  return `hue-rotate(${rot}deg)`
+}
+
+/**
+ * Draw the NimHouse chick.
+ * Prefers the official sprite (tinted to the skin, accessories overlaid);
+ * falls back to the procedural chicken when the sprite is not loaded yet.
+ */
+export function drawChicken(ctx, x, y, s, skin, t = 0, flap = 0, rot = 0) {
+  if (chickSpriteReady && chickSprite && chickSprite.naturalWidth > 0 && ctx.drawImage) {
+    drawChickenSprite(ctx, x, y, s, skin, t, flap, rot)
+    return
+  }
+  drawChickenCanvas(ctx, x, y, s, skin, t, flap, rot)
+}
+
+function drawChickenSprite(ctx, x, y, s, skin, t, flap, rot) {
+  const S = 54 * s
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.rotate(rot)
+  const sy = 1 + Math.sin(flap) * 0.04
+  ctx.scale(1, sy)
+  const tint = chickTint(skin)
+  if (tint) {
+    try {
+      ctx.filter = tint
+    } catch {
+      /* filter unsupported — draw untinted */
+    }
+  }
+  ctx.drawImage(chickSprite, -S / 2, -S / 2, S, S)
+  ctx.filter = 'none'
+
+  // head sits upper-right of the sprite's center
+  const hx = 0.1 * S
+  const hy = -0.19 * S
+
+  if (skin && skin.accessory === 'helmet') {
+    ctx.fillStyle = 'rgba(185,225,255,0.85)'
+    ctx.beginPath()
+    ctx.arc(hx, hy, 0.17 * S, Math.PI * 0.92, Math.PI * 2.08)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(80,140,200,0.5)'
+    ctx.lineWidth = 1.6 * s
+    ctx.stroke()
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'
+    ctx.beginPath()
+    ctx.ellipse(hx - 0.06 * S, hy - 0.09 * S, 0.06 * S, 0.028 * S, -0.5, 0, Math.PI * 2)
+    ctx.fill()
+  } else if (skin && skin.accessory === 'sunglasses') {
+    ctx.fillStyle = '#141414'
+    rr(ctx, hx - 0.11 * S, hy - 0.015 * S, 0.085 * S, 0.06 * S, 0.012 * S)
+    ctx.fill()
+    rr(ctx, hx + 0.045 * S, hy - 0.045 * S, 0.085 * S, 0.06 * S, 0.012 * S)
+    ctx.fill()
+    ctx.fillRect(hx - 0.025 * S, hy - 0.005 * S, 0.07 * S, 0.012 * S)
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'
+    ctx.fillRect(hx - 0.095 * S, hy - 0.008 * S, 0.025 * S, 0.01 * S)
+    ctx.fillRect(hx + 0.06 * S, hy - 0.038 * S, 0.025 * S, 0.01 * S)
+  } else if (skin && skin.accessory === 'crown') {
+    const cy2 = hy - 0.15 * S
+    ctx.fillStyle = '#ffd23f'
+    ctx.beginPath()
+    ctx.moveTo(hx - 0.07 * S, cy2)
+    ctx.lineTo(hx - 0.045 * S, cy2 - 0.055 * S)
+    ctx.lineTo(hx - 0.015 * S, cy2 - 0.02 * S)
+    ctx.lineTo(hx + 0.012 * S, cy2 - 0.06 * S)
+    ctx.lineTo(hx + 0.04 * S, cy2 - 0.02 * S)
+    ctx.lineTo(hx + 0.068 * S, cy2 - 0.055 * S)
+    ctx.lineTo(hx + 0.07 * S, cy2)
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(140,90,0,0.5)'
+    ctx.lineWidth = 1.2 * s
+    ctx.stroke()
+    ctx.fillStyle = '#e63946'
+    ctx.beginPath()
+    ctx.arc(hx + 0.012 * S, cy2 - 0.03 * S, 0.012 * S, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
 /** rounded-rect path (manual — avoids ctx.roundRect compat issues) */
 export function rr(ctx, x, y, w, h, r) {
   const rad = Math.min(r, w / 2, h / 2)
@@ -30,11 +159,11 @@ function shade(hex, f) {
 }
 
 /**
- * Draw the absurd NimHouse chicken (cute cartoon style).
+ * Draw the absurd NimHouse chicken (cute cartoon style) — procedural fallback art.
  * @param flap wing animation phase (radians)
  * @param rot body rotation
  */
-export function drawChicken(ctx, x, y, s, skin, t = 0, flap = 0, rot = 0) {
+function drawChickenCanvas(ctx, x, y, s, skin, t = 0, flap = 0, rot = 0) {
   const c = skin.colors
   const out = 'rgba(96,56,18,0.38)'
   ctx.save()
