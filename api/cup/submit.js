@@ -41,16 +41,22 @@ export default async function handler(req, res) {
     )
       return bad('message/score mismatch')
 
-    // Nimiq wallet signs keccak256(message) with ed25519.
-    const msgHash = Buffer.from(keccak256(message))
-    const pub = Buffer.from(publicKey, 'hex')
-    const sig = Buffer.from(signature, 'hex')
-    if (pub.length !== 32 || sig.length !== 64) return bad('bad key sizes')
+    // Nimiq wallets sign the message with ed25519. Depending on the
+    // provider build the signed payload is either the raw message or
+    // keccak256(message) — accept whichever verifies. (0x prefixes are
+    // normalized on both sides.)
+    const clean = (h) => String(h || '').replace(/^0x/i, '')
+    const pub = Buffer.from(clean(publicKey), 'hex')
+    const sig = Buffer.from(clean(signature), 'hex')
+    if (pub.length !== 32 || sig.length !== 64)
+      return bad(`bad key sizes (pub=${pub.length}, sig=${sig.length})`)
     let okSig = false
     try {
       const der = Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), pub])
       const key = crypto.createPublicKey({ key: der, format: 'der', type: 'spki' })
-      okSig = crypto.verify(null, msgHash, key, sig)
+      okSig =
+        crypto.verify(null, Buffer.from(keccak256(message)), key, sig) ||
+        crypto.verify(null, Buffer.from(message, 'utf8'), key, sig)
     } catch {
       okSig = false
     }
