@@ -88,6 +88,24 @@ node scripts/payout.mjs --dry-run   # preview the payout table
 node scripts/payout.mjs             # interactive: paste each tx hash (or s to skip)
 ```
 
+### Player names (signed claims)
+
+Names are **claimed, not typed**: the player submits a gamertag in the menu (☰ → Player), the app
+signs `NimHouse Name | name=<name> | device=<device>` with the wallet, and the server verifies it
+before storing it in the public [`data/names.json`](data/names.json).
+
+- The claimed name **is** the player's Cup identity — Cup entries display the claimed name
+  server-side, so a client can't spoof a different one.
+- Changing the name requires a **new wallet signature** (tracked with a `changes` counter).
+- A device's name is **locked to the wallet that first claimed it** — another wallet on the same
+  device is rejected. (Message signing was chosen over a NIM transaction: same security — the key
+  holder approves — at zero fee.)
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/name?device=…` | Look up a device's claimed name |
+| `POST /api/name/claim` | Verify signature + store/update the claim |
+
 ## Quick start
 
 ```bash
@@ -132,9 +150,13 @@ api/
   cup.js                  Cup GET + shared game list + 3-day period math
   cup/submit.js           verify wallet signature, record/upgrade entry
   cup/payout.js           admin-gated payout tx recorder
-  lib/store.js            read/write data/cup.json via the GitHub Contents API
+  name/index.js           GET a device's claimed name
+  name/claim.js           verify signature + store/update a name claim
+  lib/store.js            read/write data/*.json via the GitHub Contents API
+  lib/verify.js           shared ed25519 + Nimiq Keyguard digest verification
 data/
   cup.json                cup pool + entries + payouts (public, auditable)
+  names.json              signed player-name claims (public, auditable)
 src/
   App.jsx                 hub: wallet, shop, cheer, leaderboards, routing
   wallet.js               SDK init + demo-mode fallback, device id, NIM helpers

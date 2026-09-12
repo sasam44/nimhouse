@@ -97,6 +97,15 @@ const nameInput = document.querySelector('.name-input')
 const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
 nativeSetter.call(nameInput, 'SmokeTest')
 nameInput.dispatchEvent(new window.Event('input', { bubbles: true }))
+await sleep(200)
+const submitNameBtn = allButtons().find((b) => b.textContent.includes('Submit name'))
+check('submit name button present', !!submitNameBtn)
+submitNameBtn.dispatchEvent(new window.Event('click', { bubbles: true }))
+await sleep(500)
+check(
+  'name submitted (demo: saved on device)',
+  document.body.textContent.includes('saved on this device')
+)
 
 // connect wallet from the menu
 const connectBtn = allButtons().find((b) => b.textContent.includes('Connect wallet'))

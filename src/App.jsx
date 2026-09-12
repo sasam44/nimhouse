@@ -247,13 +247,19 @@ function MenuPanel({
   connectErr,
   chain,
   accounts,
-  player,
   bests,
   cupHistory,
+  claim,
+  claimBusy,
+  claimEditing,
+  draftName,
+  onDraftName,
+  onClaim,
+  onClaimEdit,
+  onClaimCancel,
   onConnect,
   onDisconnect,
   onRefreshChain,
-  onPlayerChange,
   onClose,
 }) {
   return (
@@ -269,13 +275,56 @@ function MenuPanel({
 
         <div className="menu-section">
           <div className="menu-label">Player</div>
-          <input
-            className="name-input"
-            value={player}
-            placeholder="e.g. ChickRider"
-            maxLength={16}
-            onChange={(e) => onPlayerChange(e.target.value)}
-          />
+          {claim && !claimEditing ? (
+            <div>
+              <div className="player-claimed">
+                <b>{claim.name}</b>
+                <span className="badge verified">🔒 signed</span>
+              </div>
+              <div className="wallet-meta">
+                Claimed by your wallet{claim.changes ? ` · changed ${claim.changes}×` : ''}. This is
+                your Cup identity.
+              </div>
+              <button className="btn small ghost" onClick={onClaimEdit} disabled={claimBusy}>
+                ✎ Change name (signs again)
+              </button>
+            </div>
+          ) : (
+            <div>
+              <input
+                className="name-input"
+                value={draftName}
+                placeholder="Choose a gamertag (1–16)"
+                maxLength={16}
+                onChange={(e) => onDraftName(e.target.value)}
+              />
+              <button
+                className="btn primary block"
+                disabled={claimBusy || !draftName.trim()}
+                onClick={() => onClaim(draftName)}
+              >
+                {claimBusy ? (
+                  <>
+                    <span className="spin" /> Signing…
+                  </>
+                ) : claim ? (
+                  'Submit new name'
+                ) : (
+                  'Submit name'
+                )}
+              </button>
+              {claimEditing && (
+                <button className="btn small ghost" onClick={onClaimCancel} disabled={claimBusy}>
+                  Cancel
+                </button>
+              )}
+              <div className="wallet-meta">
+                {claim
+                  ? 'Changing your name requires a new wallet signature.'
+                  : 'Submitting signs your name with your wallet — it becomes your Cup identity.'}
+              </div>
+            </div>
+          )}
           <div className="menu-sub">Cup entries — your wins at the NimHouse</div>
           {cupHistory.length === 0 ? (
             <div className="cup-note">
@@ -365,6 +414,10 @@ export default function App() {
   const [wallet, setWallet] = useState(null)
   const [view, setView] = useState('hub')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [claim, setClaim] = useState(null)
+  const [claimBusy, setClaimBusy] = useState(false)
+  const [claimEditing, setClaimEditing] = useState(false)
+  const [draftName, setDraftName] = useState('')
   const [cupHistory, setCupHistory] = useState(() => {
     try {
       const h = JSON.parse(localStorage.getItem('nimhouse.cup') || '[]')
@@ -421,6 +474,78 @@ export default function App() {
     getWallet().then(setWallet)
     return () => clearTimeout(toastTimer.current)
   }, [])
+
+  // Look up this device's claimed name (public registry in the repo).
+  useEffect(() => {
+    if (typeof fetch === 'undefined') return
+    let alive = true
+    getDeviceId()
+      .then((dev) => fetch(`/api/name?device=${dev}`))
+      .then((r) => r.json())
+      .then((j) => {
+        if (!alive || !j.ok || !j.claim) return
+        setClaim(j.claim)
+        setPlayer((p) => {
+          localStorage.setItem('nimhouse.player', j.claim.name)
+          return j.claim.name
+        })
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  // Claim (or re-claim) the player name with a wallet signature.
+  async function submitClaim(rawName) {
+    if (!wallet || claimBusy) return
+    const nm = String(rawName || '').trim()
+    if (!/^[A-Za-z0-9][A-Za-z0-9 ._\-]{0,15}$/.test(nm)) {
+      toastMsg('Name: 1–16 chars — letters, numbers, space, . _ -', true)
+      return
+    }
+    if (wallet.mode === 'demo') {
+      setPlayer(nm)
+      localStorage.setItem('nimhouse.player', nm)
+      setClaimEditing(false)
+      toastMsg(`Demo mode: “${nm}” saved on this device only`)
+      return
+    }
+    setClaimBusy(true)
+    try {
+      const device = await getDeviceId()
+      const message = `NimHouse Name | name=${nm} | device=${device}`
+      const res = await wallet.nimiq.sign(message)
+      if (res && res.error) throw new Error(res.error.message || 'Signing rejected')
+      const r = await fetch('/api/name/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: nm,
+          device,
+          message,
+          publicKey: String(res.publicKey).replace(/^0x/i, ''),
+          signature: String(res.signature).replace(/^0x/i, ''),
+        }),
+      })
+      const j = await r.json().catch(() => ({ ok: false, error: 'network error' }))
+      if (!j.ok) throw new Error(j.error || 'Name claim failed')
+      setClaim(j.claim)
+      setPlayer(nm)
+      localStorage.setItem('nimhouse.player', nm)
+      setClaimEditing(false)
+      setLbTick((t) => t + 1)
+      toastMsg(
+        j.claim.changes > 0
+          ? `Name updated to “${nm}” 📝`
+          : `Name “${nm}” signed & locked to your wallet 🔒`
+      )
+    } catch (e) {
+      toastMsg(e?.message || 'Name claim failed', true)
+    } finally {
+      setClaimBusy(false)
+    }
+  }
 
   useEffect(() => {
     localStorage.setItem('nimhouse.owned', JSON.stringify(owned))
@@ -702,7 +827,14 @@ export default function App() {
           </div>
           <div className="sub">Skill games inside Nimiq Pay · Cycle II</div>
         </div>
-        <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+        <button
+          className="menu-btn"
+          onClick={() => {
+            setDraftName(claim?.name || player)
+            setMenuOpen(true)
+          }}
+          aria-label="Open menu"
+        >
           ☰
         </button>
       </div>
@@ -859,16 +991,22 @@ export default function App() {
           connectErr={connectErr}
           chain={chain}
           accounts={accounts}
-          player={player}
           bests={bests}
           cupHistory={cupHistory}
+          claim={claim}
+          claimBusy={claimBusy}
+          claimEditing={claimEditing}
+          draftName={draftName}
+          onDraftName={setDraftName}
+          onClaim={submitClaim}
+          onClaimEdit={() => {
+            setDraftName(claim?.name || player)
+            setClaimEditing(true)
+          }}
+          onClaimCancel={() => setClaimEditing(false)}
           onConnect={connect}
           onDisconnect={disconnect}
           onRefreshChain={refreshChain}
-          onPlayerChange={(v) => {
-            setPlayer(v)
-            localStorage.setItem('nimhouse.player', v)
-          }}
           onClose={() => setMenuOpen(false)}
         />
       )}

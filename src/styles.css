@@ -188,6 +188,13 @@ input {
   flex-wrap: wrap;
   gap: 6px;
 }
+.player-claimed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  margin-bottom: 6px;
+}
 .masthead .sub {
   font-size: 11.5px;
   color: #9c6b84;

@@ -17,19 +17,9 @@
  *   sign( sha256( "\x16Nimiq Signed Message:\n" + String(message.length) + message ) )
  * Raw-message and keccak256 variants are also accepted for robustness.
  */
-import crypto from 'node:crypto'
-import { keccak256 } from 'js-sha3'
-import { writeCup } from '../lib/store.js'
+import { writeCup, readJsonFile } from '../lib/store.js'
+import { verifyWalletSignature } from '../lib/verify.js'
 import { GAMES, cupPeriod } from '../cup.js'
-
-/** Nimiq Keyguard message digest: sha256 of the prefixed message. */
-function nimiqMessageDigest(message) {
-  const prefixed = Buffer.concat([
-    Buffer.from([0x16]),
-    Buffer.from(`Nimiq Signed Message:\n${String(message.length)}${message}`, 'utf8'),
-  ])
-  return crypto.createHash('sha256').update(prefixed).digest()
-}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -58,29 +48,22 @@ export default async function handler(req, res) {
     )
       return bad('message/score mismatch')
 
-    // Verify the ed25519 signature. Primary scheme: the official Nimiq
-    // Keyguard "sign message" digest (sha256 of the prefixed message);
-    // raw-message and keccak256 variants are accepted for robustness.
-    // 0x prefixes are normalized on both sides.
-    const clean = (h) => String(h || '').replace(/^0x/i, '')
-    const pub = Buffer.from(clean(publicKey), 'hex')
-    const sig = Buffer.from(clean(signature), 'hex')
-    if (pub.length !== 32 || sig.length !== 64)
-      return bad(`bad key sizes (pub=${pub.length}, sig=${sig.length})`)
-    let okSig = false
-    try {
-      const der = Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), pub])
-      const key = crypto.createPublicKey({ key: der, format: 'der', type: 'spki' })
-      okSig =
-        crypto.verify(null, nimiqMessageDigest(message), key, sig) ||
-        crypto.verify(null, Buffer.from(keccak256(message)), key, sig) ||
-        crypto.verify(null, Buffer.from(message, 'utf8'), key, sig)
-    } catch {
-      okSig = false
-    }
-    if (!okSig) return bad('signature invalid')
+    // Verify the ed25519 signature (official Nimiq Keyguard scheme, with
+    // raw-message & keccak256 fallbacks — see lib/verify.js).
+    const v = verifyWalletSignature(message, publicKey, signature)
+    if (!v.ok) return bad(v.error)
 
-    const pubHex = clean(publicKey).toLowerCase()
+    const pubHex = String(publicKey).replace(/^0x/i, '').toLowerCase()
+
+    // Display name: prefer the wallet-claimed name (data/names.json) so the
+    // leaderboard identity can't be faked from the client.
+    let claimedName = ''
+    try {
+      const names = await readJsonFile('data/names.json')
+      claimedName = names.names?.[String(device).toLowerCase()]?.name || ''
+    } catch {
+      /* names store unavailable — fall back to submitted name below */
+    }
 
     const next = await writeCup((data) => {
       const byPeriod = (data.entries[game] = data.entries[game] || {})
@@ -88,7 +71,7 @@ export default async function handler(req, res) {
       const i = list.findIndex((e) => e.device === device || (pubHex && e.pub === pubHex))
       const entry = {
         device,
-        name: String(name || 'Anonymous').slice(0, 24),
+        name: claimedName || String(name || 'Anonymous').slice(0, 24),
         score: s,
         address: String(address || '').slice(0, 48),
         pub: pubHex,
