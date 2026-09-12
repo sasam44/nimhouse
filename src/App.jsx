@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { getWallet, CHEER_ADDRESS, LUNA_PER_NIM, fmtNim, shortHash } from './wallet'
+import { getWallet, getDeviceId, CHEER_ADDRESS, LUNA_PER_NIM, fmtNim, shortHash } from './wallet'
 import { SKIN_GROUPS } from './skins'
 import {
   drawChicken,
@@ -130,6 +130,20 @@ const CUP_NAMES = {
   hop: 'NimHop',
 }
 
+/** Local, per-device record of Cup entries (for the profile's win history). */
+function recordCupResult(game, periodId, score, rank) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('nimhouse.cup') || '[]')
+    const list = Array.isArray(parsed) ? parsed : []
+    list.unshift({ game, period: periodId, score, rank, ts: Date.now() })
+    const next = list.slice(0, 30)
+    localStorage.setItem('nimhouse.cup', JSON.stringify(next))
+    return next
+  } catch {
+    return []
+  }
+}
+
 /** 3-day cup periods (UTC) — must stay in sync with api/cup.js */
 function cupPeriod(date = new Date()) {
   const days = Math.floor(
@@ -226,9 +240,126 @@ function CupCard({ tick }) {
   )
 }
 
+function MenuPanel({
+  wallet,
+  connected,
+  connecting,
+  chain,
+  accounts,
+  player,
+  bests,
+  cupHistory,
+  onConnect,
+  onDisconnect,
+  onRefreshChain,
+  onPlayerChange,
+  onClose,
+}) {
+  return (
+    <>
+      <div className="menu-backdrop" onClick={onClose} />
+      <div className="menu-panel">
+        <div className="menu-head">
+          <b>🐔 NimHouse</b>
+          <button className="menu-close" onClick={onClose} aria-label="Close menu">
+            ✕
+          </button>
+        </div>
+
+        <div className="menu-section">
+          <div className="menu-label">Player</div>
+          <input
+            className="name-input"
+            value={player}
+            placeholder="e.g. ChickRider"
+            maxLength={16}
+            onChange={(e) => onPlayerChange(e.target.value)}
+          />
+          <div className="menu-sub">Cup entries — your wins at the NimHouse</div>
+          {cupHistory.length === 0 ? (
+            <div className="cup-note">
+              No cup entries yet — finish a game, then hit <b>Enter the NimHouse Cup</b>.
+            </div>
+          ) : (
+            cupHistory.slice(0, 12).map((h, i) => (
+              <div className="cup-hist-row" key={h.ts + '-' + i}>
+                <span>{['🥇', '🥈', ''][h.rank - 1] || `#${h.rank}`}</span>
+                <b>{CUP_NAMES[h.game] || h.game}</b>
+                <span className="cup-hist-dim">{h.period}</span>
+                <span className="cup-hist-score">{h.score}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="menu-section">
+          <div className="menu-label">Best scores · this device</div>
+          <div className="best-grid">
+            {Object.entries(bests).map(([g, s]) => (
+              <span className="best-chip" key={g}>
+                {CUP_NAMES[g] || g} <b>{s}</b>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="menu-section">
+          <div className="menu-label">
+            Nimiq Pay wallet
+            {wallet && (
+              <span className={`badge ${wallet.mode}`}>{wallet.mode === 'live' ? 'LIVE' : 'DEMO'}</span>
+            )}
+          </div>
+          {!wallet ? (
+            <div className="wallet-meta">
+              <span className="spin" /> Detecting Nimiq Pay…
+            </div>
+          ) : !connected ? (
+            <button className="btn primary block" onClick={onConnect} disabled={connecting}>
+              {connecting ? (
+                <>
+                  <span className="spin" /> Connecting…
+                </>
+              ) : (
+                'Connect wallet'
+              )}
+            </button>
+          ) : (
+            <div>
+              <div className="wallet-addr">{shortAddr(accounts?.[0])}</div>
+              <div className="wallet-meta">
+                Block {chain ? (chain.block || 0).toLocaleString() : '…'} · consensus{' '}
+                {chain && chain.consensus ? 'established ✓' : 'checking…'}
+              </div>
+              <div className="wallet-actions">
+                <button className="btn small ghost" onClick={onRefreshChain}>
+                  ↻ Refresh status
+                </button>
+                <button className="btn small ghost" onClick={onDisconnect}>
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function App() {
   const [wallet, setWallet] = useState(null)
   const [view, setView] = useState('hub')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [cupHistory, setCupHistory] = useState(() => {
+    try {
+      const h = JSON.parse(localStorage.getItem('nimhouse.cup') || '[]')
+      if (Array.isArray(h)) return h
+    } catch {
+      /* ignore */
+    }
+    return []
+  })
 
   // wallet
   const [connected, setConnected] = useState(false)
@@ -373,6 +504,7 @@ export default function App() {
         body: JSON.stringify(body),
       })
       const json = await r.json().catch(() => ({ ok: false, error: 'network error' }))
+      if (json.ok) setCupHistory(recordCupResult(game, period.id, json.score, json.rank))
       setLbTick((t) => t + 1)
       return json
     } catch (e) {
@@ -550,12 +682,15 @@ export default function App() {
     <div className="app">
       <div className="masthead">
         <Logo />
-        <div>
+        <div className="masthead-text">
           <div className="wordmark">
             Nim<span>House</span>
           </div>
           <div className="sub">Skill games inside Nimiq Pay · Cycle II</div>
         </div>
+        <button className="menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+          ☰
+        </button>
       </div>
 
       <div className="card" style={{ padding: '10px 14px' }}>
@@ -769,6 +904,27 @@ export default function App() {
         <br />
         MIT License · open source · no entry fees · no gambling
       </div>
+
+      {menuOpen && (
+        <MenuPanel
+          wallet={wallet}
+          connected={connected}
+          connecting={connecting}
+          chain={chain}
+          accounts={accounts}
+          player={player}
+          bests={bests}
+          cupHistory={cupHistory}
+          onConnect={connect}
+          onDisconnect={disconnect}
+          onRefreshChain={refreshChain}
+          onPlayerChange={(v) => {
+            setPlayer(v)
+            localStorage.setItem('nimhouse.player', v)
+          }}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
 
       {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
     </div>

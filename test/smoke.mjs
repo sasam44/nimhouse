@@ -86,6 +86,21 @@ await sleep(1500)
 check('wallet connected (simulated address shown)', /NQ71/.test(document.body.textContent))
 check('block number shown', /block\s*[\d,]+/.test(document.body.textContent.replace(/\s+/g, ' ')))
 
+// hamburger menu
+const menuBtn = document.querySelector('.menu-btn')
+check('hamburger menu button present', !!menuBtn)
+menuBtn.dispatchEvent(new window.Event('click', { bubbles: true }))
+await sleep(400)
+check(
+  'menu panel opens (player, cup history, wallet)',
+  !!document.querySelector('.menu-panel') &&
+    /Cup entries/.test(document.body.textContent) &&
+    /Nimiq Pay wallet/.test(document.body.textContent)
+)
+document.querySelector('.menu-close').dispatchEvent(new window.Event('click', { bubbles: true }))
+await sleep(250)
+check('menu closes', !document.querySelector('.menu-panel'))
+
 // set gamertag (React controlled input needs the native value setter)
 const nameInput = document.querySelector('.name-input')
 const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
