@@ -22,6 +22,9 @@ zero gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompe
 - **Wallet-verified scores.** Verify any run by signing a tamper-proof record with your Nimiq wallet
   — the run earns a ✓ badge on the leaderboard.
 - **Cheer the house.** Tip other players with a NIM payment that carries your message on-chain.
+- **NimHouse Cup.** Every 3 days, per game, the NimHouse wallet stakes 100 NIM (testnet). Top 3
+  wallet-verified scores take 50 / 30 / 20 % of that cup's pool, paid on-chain at the end of the cup.
+  Free to enter — one entry per device per game per cup, best score counts.
 - **Demo mode.** Running outside Nimiq Pay (browser, CI) transparently simulates wallet actions so
   the app is always fully testable. Inside Nimiq Pay everything is real.
 
@@ -33,10 +36,46 @@ zero gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompe
 | Live network status | `nimiq.isConsensusEstablished()`, `nimiq.getBlockNumber()` |
 | Skin purchases, cheers | `nimiq.sendBasicTransactionWithData()` (NIM, Luna, note on-chain) |
 | Score verification | `nimiq.sign()` (message signing) |
+| Cup entries | `nimiq.sign()` → server verifies the ed25519 signature, then stores the entry |
 | Leaderboard device id | `requestDeviceIdentifier()` from `@nimiq/mini-app-sdk` |
 
 Built with the official stack from the [mini app tutorial](https://nimiq.dev/mini-apps/tutorials/mini-app-tutorial):
-Vite + React + `@nimiq/mini-app-sdk`. No other runtime dependencies.
+Vite + React + `@nimiq/mini-app-sdk`. One extra runtime dependency, `js-sha3` (keccak256, used by
+the Cup API to match how Nimiq wallets hash signed messages).
+
+## NimHouse Cup (prize pool)
+
+A free-to-enter, skill-only cup runs on a **3-day cycle**, independently per game.
+
+- **Stake.** At the start of every cup the NimHouse wallet stakes `100 NIM` (testnet) per game.
+- **Entry.** Finish any game → **Enter the NimHouse Cup**. The app signs a tamper-proof message
+  (`game | period | score | device`) with your Nimiq wallet. The server re-verifies the ed25519
+  signature before accepting the entry — a score you didn't sign with your own key is rejected.
+- **Fairness.** One entry per device per game per cup (replays are free; the best score counts). No
+  entry fee, no randomness, no betting.
+- **Payout.** At the end of each cup the **top 3** take **50 / 30 / 20 %** of that cup's pool, paid
+  on-chain from the NimHouse wallet. Winners and payout tx hashes are public.
+- **Transparency.** Pool, entries, and payouts are stored in the open repo at
+  [`data/cup.json`](data/cup.json). Anyone can audit every entry and payment.
+
+### Cup API (Vercel serverless functions)
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/cup` | Current period, pool, top-3 per game, recorded payouts |
+| `POST /api/cup/submit` | Verify signature + record/upgrade an entry |
+| `POST /api/cup/payout` | Record a payout tx (admin-gated) |
+
+The functions read/write `data/cup.json` in this repo via the GitHub Contents API. Configure in
+Vercel (never commit these):
+
+```
+CUP_GITHUB_TOKEN     fine-grained PAT with Contents: read/write on this repo
+CUP_GITHUB_REPO      <owner>/<repo>   (e.g. sasam44/nimhouse)
+CUP_ADMIN_SECRET     random secret guarding /api/cup/payout (sent as x-cup-admin)
+```
+
+`data/cup.json` is seeded with a `PENDING` wallet; the Cup card auto-enables once the wallet is set.
 
 ## Quick start
 
@@ -65,14 +104,26 @@ Then open it from Nimiq Pay with `https://nimpay.app/miniapps/open/<your-domain>
 
 **Current production deployment:** [https://nimhouse.vercel.app](https://nimhouse.vercel.app)
 
-### Before submitting: set your payout address
+### Payout / staking address
 
-`CHEER_ADDRESS` in [`src/wallet.js`](src/wallet.js) is the recipient for skin purchases and cheers.
-Replace it with your real Nimiq Pay address.
+`CHEER_ADDRESS` in [`src/wallet.js`](src/wallet.js) is the recipient for skin purchases, cheers, and
+Cup stakes. The live deployment uses the real NimHouse wallet:
+`NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ`.
+
+> **Note:** Vercel serverless functions bake env vars in at deploy time — after changing
+> `CUP_ADMIN_SECRET` (or any `CUP_*` var) run a fresh `deploy --prod` for the running functions to
+> pick up the new values.
 
 ## Project structure
 
 ```
+api/
+  cup.js                  Cup GET + shared game list + 3-day period math
+  cup/submit.js           verify wallet signature, record/upgrade entry
+  cup/payout.js           admin-gated payout tx recorder
+  lib/store.js            read/write data/cup.json via the GitHub Contents API
+data/
+  cup.json                cup pool + entries + payouts (public, auditable)
 src/
   App.jsx                 hub: wallet, shop, cheer, leaderboards, routing
   wallet.js               SDK init + demo-mode fallback, device id, NIM helpers
@@ -95,7 +146,8 @@ src/
 
 - ✅ Built on the **Nimiq Pay Mini Apps Framework** (SDK `init()` + provider APIs)
 - ✅ Integrates **NIM** natively (payments + signing) — scores under Nimiq integration
-- ✅ **No gambling / no games of chance** — all three games are deterministic skill games
+- ✅ **No gambling / no games of chance** — all seven games are deterministic skill games; the Cup
+  is a free-to-enter skill prize pool (no entry fee, no chance), which the rules explicitly permit
 - ✅ Fully functional product, no prototype pieces, works on first try
 - ✅ Public repo, **MIT License** (see `LICENSE`), no hardcoded secrets
 - ✅ AI tools used in development (permitted by the competition FAQ)
