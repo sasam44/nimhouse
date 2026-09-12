@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "NimHouse — a skill-based mini game house inside Nimiq Pay. Nimiq Mini Apps Competition, Cycle II.",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

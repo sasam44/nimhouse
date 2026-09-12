@@ -58,6 +58,8 @@ npm run build   # outputs dist/
 
 Then open it from Nimiq Pay with `https://nimpay.app/miniapps/open/<your-domain>`.
 
+**Current production deployment:** [https://nimhouse.vercel.app](https://nimhouse.vercel.app)
+
 ### Before submitting: set your payout address
 
 `CHEER_ADDRESS` in [`src/wallet.js`](src/wallet.js) is the recipient for skin purchases and cheers.

@@ -1,5 +1,12 @@
 # NimHouse — Submission Kit (Cycle II · deadline 18 Sep)
 
+## 🌐 Live URL (deployed on Vercel)
+
+- **App:** https://nimhouse.vercel.app
+- **Nimiq Pay open link (share this):** `https://nimpay.app/miniapps/open/nimhouse.vercel.app`
+- Nimiq Pay → **Mini Apps → Custom URL** → paste `https://nimhouse.vercel.app`
+
+
 ## 1. Description (≤250 words) — paste this into the portal
 
 > NimHouse is a skill-based mini game house inside Nimiq Pay, bundling three original games: NimChick, a Flappy Bird–style flapper starring an absurd mustached chicken; NimStack, a precision block-stacking game where every overhang gets sliced off; and NimBullseye, a dart game where you read a swaying aim and time your power release. Every game is 100% player skill — no entry fees, no betting, no chance-based outcomes.
