@@ -178,24 +178,28 @@ check('NimSlice score recorded', sliceLb.length > 0)
 check('slice score is a multiple of 5', sliceLb.length > 0 && sliceLb[0].score % 5 === 0)
 await backToHub()
 
-// ---------- NimHop ----------
-// No steering in jsdom → chick bounces until a platform is off-center → falls → game over.
-// Tower layout is fixed-seed, so the outcome is deterministic.
+// ---------- NimKnife ----------
+// No throws in jsdom → chick rides down level 1 untouched (~13s, deterministic
+// descent) → block-smash level 2 begins → unsmashed blocks reach the orbiting
+// chick and drain the 3 hearts → game over.
 await openGame(6)
-check('NimHop ready overlay', document.body.textContent.includes('HOLD ◀ ▶ or DRAG to steer'))
+check('NimKnife ready overlay', document.body.textContent.includes('TAP or SPACE to throw'))
 view = stage()
-const hDown = new window.Event('pointerdown', { bubbles: true })
-Object.defineProperty(hDown, 'clientX', { value: 180 })
-Object.defineProperty(hDown, 'clientY', { value: 400 })
-view.dispatchEvent(hDown)
-const hUp = new window.Event('pointerup', { bubbles: true })
-window.dispatchEvent(hUp)
-await sleep(12000) // a few bounces then fall off the bottom
+const kDown = new window.Event('pointerdown', { bubbles: true })
+Object.defineProperty(kDown, 'clientX', { value: 180 })
+Object.defineProperty(kDown, 'clientY', { value: 400 })
+view.dispatchEvent(kDown)
+const kUp = new window.Event('pointerup', { bubbles: true })
+window.dispatchEvent(kUp)
+await sleep(14000) // level 1 descent completes untouched — still alive
 over = document.body.textContent.includes('Play again')
-check('NimHop ends when the chick falls', over)
-const hopLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.hop') || '[]')
-check('NimHop score recorded', hopLb.length > 0)
-check('hop height is a non-negative integer', hopLb.length > 0 && Number.isInteger(hopLb[0].score) && hopLb[0].score >= 0)
+check('NimKnife still alive after level 1 (chick reached the bottom)', !over)
+await sleep(16000) // block storm drains 3 hearts
+over = document.body.textContent.includes('Play again')
+check('NimKnife ends when hearts run out', over)
+const knifeLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.knife') || '[]')
+check('NimKnife score recorded', knifeLb.length > 0)
+check('knife score is a non-negative integer', knifeLb.length > 0 && Number.isInteger(knifeLb[0].score) && knifeLb[0].score >= 0)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)

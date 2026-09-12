@@ -781,54 +781,62 @@ export function drawSlicePreview(ctx, w, h, skin) {
   drawChicken(ctx, w * 0.16, h * 0.84, 0.62, skin, 0.6, 2, 0.05)
 }
 
-/** Teal platforms + bouncing chicken + spring (NimHop thumbnail). */
-export function drawHopPreview(ctx, w, h, skin) {
+/** Knife tower + chick + block (NimKnife thumbnail). */
+export function drawKnifePreview(ctx, w, h, skin) {
   ctx.clearRect(0, 0, w, h)
   // sky
   const sky = ctx.createLinearGradient(0, 0, 0, h)
-  sky.addColorStop(0, '#bfeaff')
-  sky.addColorStop(1, '#eefaff')
+  sky.addColorStop(0, '#7ec8f2')
+  sky.addColorStop(1, '#e8f7ff')
   ctx.fillStyle = sky
   ctx.fillRect(0, 0, w, h)
-  drawSun(ctx, w * 0.78, h * 0.16, 9)
-  // platforms (stair-step upward)
-  const plats = [
-    { x: w * 0.3, y: h * 0.82 },
-    { x: w * 0.62, y: h * 0.62 },
-    { x: w * 0.32, y: h * 0.4 },
-    { x: w * 0.66, y: h * 0.2 },
-  ]
-  for (const p of plats) {
-    ctx.fillStyle = '#3d8ba1'
-    rr(ctx, p.x - 13, p.y, 26, 6, 3)
-    ctx.fill()
-    ctx.fillStyle = 'rgba(255,255,255,0.3)'
-    rr(ctx, p.x - 11, p.y + 1, 22, 2, 1)
-    ctx.fill()
-  }
-  // spring on the third platform
-  const sp = plats[2]
-  ctx.strokeStyle = '#cdd5de'
-  ctx.lineWidth = 1.4
-  ctx.beginPath()
-  ctx.moveTo(sp.x - 4, sp.y - 3)
-  ctx.lineTo(sp.x + 4, sp.y - 6)
-  ctx.moveTo(sp.x - 4, sp.y - 6)
-  ctx.lineTo(sp.x + 4, sp.y - 9)
-  ctx.stroke()
-  ctx.fillStyle = '#e63946'
-  rr(ctx, sp.x - 5, sp.y - 4, 10, 4, 1.5)
-  ctx.fill()
-  // upward dotted arc
-  ctx.fillStyle = 'rgba(43,108,176,0.75)'
-  for (let i = 1; i <= 4; i++) {
-    const t = i / 4
+  drawSun(ctx, w * 0.8, h * 0.16, 8)
+  // cube tower
+  const tx = w * 0.42
+  const tw = 18
+  for (let k = 0; k < 7; k++) {
+    const y = h - 6 - (k + 1) * 12.5
+    ctx.fillStyle = k % 2 ? '#b45309' : '#c2660d'
+    ctx.fillRect(tx, y, tw, 12)
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'
+    ctx.fillRect(tx, y, tw, 2)
+    ctx.fillStyle = 'rgba(0,0,0,0.28)'
     ctx.beginPath()
-    ctx.arc(w * 0.2 + t * w * 0.14, h * 0.72 - Math.sin(t * Math.PI * 0.8) * h * 0.22, 2, 0, Math.PI * 2)
+    ctx.moveTo(tx + tw / 2, y + 3.5)
+    ctx.lineTo(tx + tw / 2 - 3, y + 8)
+    ctx.lineTo(tx + tw / 2 + 3, y + 8)
+    ctx.closePath()
     ctx.fill()
   }
-  // chicken mid-bounce on platform 1
-  drawChicken(ctx, plats[0].x, plats[0].y - 12, 0.62, skin, 0.6, 2.4, -0.15)
+  // stuck knives (alternating sides)
+  for (let i = 0; i < 4; i++) {
+    const y = h - 22 - i * 25
+    const side = i % 2 ? 1 : -1
+    const x = tx + (side > 0 ? -2 : tw + 2)
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.fillStyle = '#cdd5de'
+    ctx.beginPath()
+    ctx.moveTo(side * 11, 0)
+    ctx.lineTo(side * 2, -2.4)
+    ctx.lineTo(side * 2, 2.4)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = '#8b4513'
+    ctx.fillRect(side * 2 - (side > 0 ? 5 : 0), -1.4, 5, 2.8)
+    ctx.restore()
+  }
+  // chick on top of the tower
+  drawChicken(ctx, tx + tw / 2, h - 6 - 7 * 12.5 - 8, 0.6, skin, 0.6, 2.2, -0.1)
+  // stray block
+  ctx.save()
+  ctx.translate(w * 0.16, h * 0.5)
+  ctx.rotate(0.5)
+  ctx.fillStyle = '#dc2626'
+  ctx.fillRect(-7, -7, 14, 14)
+  ctx.fillStyle = 'rgba(255,255,255,0.25)'
+  ctx.fillRect(-7, -7, 14, 4.5)
+  ctx.restore()
 }
 
 /** Fly + swatter + BONK (NimSwat thumbnail). */

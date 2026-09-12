@@ -12,7 +12,7 @@ zero gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompe
 | **NimRush** | Pseudo-3D chicken runner — weave through cows, UFOs, giant sausages | reflexes |
 | **NimSwat** | One angry mustachioed fly; tap it before it gets too fast (5 misses = escape) | moving-target accuracy |
 | **NimSlice** | Sausage volleys fly up the screen — swipe to slice them all (3 escapes = over) | swipe timing |
-| **NimHop** | Doodle-Jump style — steer a bouncing chick up an endless, fixed-seed platform tower | platforming & wrap reflexes |
+| **NimKnife** | Stick knives down a cube tower beneath the falling chick, then smash the orbiting block storm | throw timing & spatial judgment |
 
 ## Why NimHouse
 
@@ -170,7 +170,7 @@ src/
   games/NimRush.jsx       pseudo-3D lane-dodge runner
   games/NimSwat.jsx       moving-target swatter
   games/NimSlice.jsx      swipe-slicing sausage volley (portrait-friendly)
-  games/NimHop.jsx        endless platform hopper (fixed-seed tower, wrap-around)
+  games/NimKnife.jsx      knife-tower + block-smash levels (falling/orbiting chick)
   assets/chick.png        official NimHouse chick sprite (all games + hub; procedural art remains as fallback)
   components/ScoreOverlay.jsx  shared round-over + verify flow
 ```
