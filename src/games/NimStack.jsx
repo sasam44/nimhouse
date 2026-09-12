@@ -20,7 +20,7 @@ const QUOTES = [
   'The blocks remember your hands.',
 ]
 
-export default function NimStack({ skin, player, onExit, onScore, requestVerify, walletMode }) {
+export default function NimStack({ skin, player, onExit, onScore, requestVerify, walletMode, requestCup }) {
   const canvasRef = useRef(null)
   const stageRef = useRef(null)
   const controls = useRef({ replay: () => {} })
@@ -400,6 +400,7 @@ export default function NimStack({ skin, player, onExit, onScore, requestVerify,
               onExit={onExit}
               requestVerify={requestVerify}
               entryId={entry?.id}
+              onCup={requestCup}
               walletMode={walletMode}
             />
           </div>

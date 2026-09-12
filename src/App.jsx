@@ -120,6 +120,88 @@ function SkinThumb({ group, skin }) {
   return <canvas ref={ref} width={52} height={52} />
 }
 
+const CUP_NAMES = {
+  chick: 'NimChick',
+  stack: 'NimStack',
+  bull: 'NimBullseye',
+  rush: 'NimRush',
+  swat: 'NimSwat',
+  slice: 'NimSlice',
+  hop: 'NimHop',
+}
+
+function CupCard({ tick }) {
+  const [cup, setCup] = useState(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    if (typeof fetch === 'undefined') {
+      setFailed(true)
+      return
+    }
+    let alive = true
+    fetch('/api/cup')
+      .then((r) => r.json())
+      .then((j) => {
+        if (!alive) return
+        if (j.ok) {
+          setCup(j)
+          setFailed(false)
+        } else setFailed(true)
+      })
+      .catch(() => alive && setFailed(true))
+    return () => {
+      alive = false
+    }
+  }, [tick])
+
+  const pool = cup?.pool
+  const walletReady = pool?.wallet && !/PENDING/.test(pool.wallet)
+  return (
+    <div className="card cup-card">
+      <h3>🏆 NimHouse Cup — daily</h3>
+      <p className="cup-pool">
+        {pool?.perGameDailyNim ?? 100} NIM per game · top 3 take{' '}
+        {pool?.splitPct?.join(' / ') ?? '50 / 30 / 20'}% · staked daily by the{' '}
+        <b>NimHouse wallet</b>
+        {walletReady && <span className="cup-wallet"> · {pool.wallet.slice(0, 6)}…{pool.wallet.slice(-4)}</span>}
+      </p>
+      {cup ? (
+        <div className="cup-board">
+          {cup.games.map((g) => {
+            const top = cup.leaders[g] || []
+            const paid = cup.payouts[g]
+            return (
+              <div className="cup-row" key={g}>
+                <div className="cup-game">{CUP_NAMES[g]}</div>
+                <div className="cup-top">
+                  {top.length === 0 && <span className="cup-empty">no entries yet — be first</span>}
+                  {top.slice(0, 3).map((e, i) => (
+                    <span className="cup-medal" key={e.device} title={e.device}>
+                      <b>{['🥇', '🥈', '🥉'][i]}</b> {e.name} <b>{e.score}</b>
+                    </span>
+                  ))}
+                  {paid && <span className="badge verified">paid ✓</span>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        !failed && (
+          <div className="cup-note">
+            Loading today's board…
+          </div>
+        )
+      )}
+      <p className="cup-note">
+        Free to play · no entry fee, no gambling. Finish any game → <b>Enter the NimHouse Cup</b>{' '}
+        (signs with your Nimiq wallet). One entry per device per game per day — best score
+        counts. Pool, entries &amp; payouts are public in the open-source repo.
+      </p>
+    </div>
+  )
+}
+
 export default function App() {
   const [wallet, setWallet] = useState(null)
   const [view, setView] = useState('hub')
@@ -242,6 +324,38 @@ export default function App() {
     }
   }
 
+  async function cupSubmit(game, score) {
+    if (!wallet || wallet.mode === 'demo') return { ok: false, error: 'Open inside Nimiq Pay to enter the Cup' }
+    const day = new Date().toISOString().slice(0, 10)
+    try {
+      const device = await getDeviceId()
+      const message = `NimHouse Cup | game=${game} | day=${day} | score=${Math.floor(score)} | device=${device}`
+      const res = await wallet.nimiq.sign(message)
+      if (res && res.error) return { ok: false, error: res.error.message || 'Signing rejected' }
+      const body = {
+        game,
+        day,
+        score: Math.floor(score),
+        name: player || 'Anonymous',
+        device,
+        address: Array.isArray(accounts) && accounts[0] ? accounts[0] : '',
+        message,
+        publicKey: res.publicKey,
+        signature: res.signature,
+      }
+      const r = await fetch('/api/cup/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await r.json().catch(() => ({ ok: false, error: 'network error' }))
+      setLbTick((t) => t + 1)
+      return json
+    } catch (e) {
+      return { ok: false, error: e?.message || 'Cup entry failed' }
+    }
+  }
+
   // ---------------- shop ----------------
   function selectSkin(group, id) {
     setSel((s) => ({ ...s, [group]: id }))
@@ -353,7 +467,7 @@ export default function App() {
   if (view === 'chick') {
     return (
       <>
-        <NimChick skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('chick', id)} />
+        <NimChick skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('chick', id)} requestCup={(score) => cupSubmit('chick', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -361,7 +475,7 @@ export default function App() {
   if (view === 'stack') {
     return (
       <>
-        <NimStack skin={stackSkin} {...gameProps} requestVerify={(id) => verifyScore('stack', id)} />
+        <NimStack skin={stackSkin} {...gameProps} requestVerify={(id) => verifyScore('stack', id)} requestCup={(score) => cupSubmit('stack', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -369,7 +483,7 @@ export default function App() {
   if (view === 'bull') {
     return (
       <>
-        <NimBullseye skin={dartSkin} {...gameProps} requestVerify={(id) => verifyScore('bull', id)} />
+        <NimBullseye skin={dartSkin} {...gameProps} requestVerify={(id) => verifyScore('bull', id)} requestCup={(score) => cupSubmit('bull', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -377,7 +491,7 @@ export default function App() {
   if (view === 'rush') {
     return (
       <>
-        <NimRush skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('rush', id)} />
+        <NimRush skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('rush', id)} requestCup={(score) => cupSubmit('rush', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -385,7 +499,7 @@ export default function App() {
   if (view === 'swat') {
     return (
       <>
-        <NimSwat {...gameProps} requestVerify={(id) => verifyScore('swat', id)} />
+        <NimSwat {...gameProps} requestVerify={(id) => verifyScore('swat', id)} requestCup={(score) => cupSubmit('swat', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -393,7 +507,7 @@ export default function App() {
   if (view === 'slice') {
     return (
       <>
-        <NimSlice skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('slice', id)} />
+        <NimSlice skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('slice', id)} requestCup={(score) => cupSubmit('slice', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -401,7 +515,7 @@ export default function App() {
   if (view === 'hop') {
     return (
       <>
-        <NimHop skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('hop', id)} />
+        <NimHop skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('hop', id)} requestCup={(score) => cupSubmit('hop', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -523,6 +637,8 @@ export default function App() {
           ))}
         </div>
       </div>
+
+      <CupCard tick={lbTick} />
 
       <div className="card">
         <h3>NIM shop — cosmetics only</h3>

@@ -85,7 +85,7 @@ function hudBox(ctx, x, y, text, align) {
   ctx.fillText(text, bx + 9, y + 18)
 }
 
-export default function NimHop({ skin, player, onExit, onScore, requestVerify, walletMode }) {
+export default function NimHop({ skin, player, onExit, onScore, requestVerify, walletMode, requestCup }) {
   const canvasRef = useRef(null)
   const stageRef = useRef(null)
   const controls = useRef({ replay: () => {}, held: { l: false, r: false } })
@@ -465,6 +465,7 @@ export default function NimHop({ skin, player, onExit, onScore, requestVerify, w
               onExit={onExit}
               requestVerify={requestVerify}
               entryId={entry?.id}
+              onCup={requestCup}
               walletMode={walletMode}
             />
           </div>

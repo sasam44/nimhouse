@@ -310,7 +310,7 @@ function drawObstacle(ctx, o, t) {
   }
 }
 
-export default function NimRush({ skin, player, onExit, onScore, requestVerify, walletMode }) {
+export default function NimRush({ skin, player, onExit, onScore, requestVerify, walletMode, requestCup }) {
   const canvasRef = useRef(null)
   const stageRef = useRef(null)
   const controls = useRef({ replay: () => {} })
@@ -698,6 +698,7 @@ export default function NimRush({ skin, player, onExit, onScore, requestVerify, 
               onExit={onExit}
               requestVerify={requestVerify}
               entryId={entry?.id}
+              onCup={requestCup}
               walletMode={walletMode}
             />
           </div>

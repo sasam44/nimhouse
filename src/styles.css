@@ -668,3 +668,81 @@ canvas.game {
 .hudbtn:active {
   background: rgba(255, 255, 255, 0.9);
 }
+
+/* ---------- NimHouse Cup ---------- */
+.cup-card {
+  border-color: rgba(255, 183, 3, 0.45);
+  background:
+    linear-gradient(180deg, rgba(255, 183, 3, 0.10), rgba(255, 183, 3, 0.02)),
+    var(--card);
+}
+.cup-pool {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.5;
+}
+.cup-pool b {
+  color: var(--amber);
+}
+.cup-wallet {
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.cup-board {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.cup-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+}
+.cup-game {
+  flex: none;
+  width: 86px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--amber);
+}
+.cup-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 11.5px;
+  align-items: center;
+}
+.cup-medal b {
+  color: var(--text);
+}
+.cup-medal .badge {
+  margin-left: 4px;
+}
+.cup-empty {
+  color: var(--dim);
+  font-style: italic;
+}
+.cup-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--dim);
+  line-height: 1.55;
+}
+.cup-line {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.cup-line.ok {
+  color: var(--green);
+}
+.cup-line.err {
+  color: var(--red);
+}

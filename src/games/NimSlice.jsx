@@ -212,7 +212,7 @@ function drawKnife(ctx, x, y, ang) {
   ctx.restore()
 }
 
-export default function NimSlice({ skin, player, onExit, onScore, requestVerify, walletMode }) {
+export default function NimSlice({ skin, player, onExit, onScore, requestVerify, walletMode, requestCup }) {
   const canvasRef = useRef(null)
   const stageRef = useRef(null)
   const controls = useRef({ replay: () => {} })
@@ -773,6 +773,7 @@ export default function NimSlice({ skin, player, onExit, onScore, requestVerify,
               onExit={onExit}
               requestVerify={requestVerify}
               entryId={entry?.id}
+              onCup={requestCup}
               walletMode={walletMode}
             />
           </div>

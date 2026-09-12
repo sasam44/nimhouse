@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
 /**
- * Shared "round over" overlay for all three games.
- * Handles the wallet-verified score badge flow.
+ * Shared "round over" overlay for all games.
+ * Handles the wallet-verified score badge + optional NimHouse Cup entry.
  */
 export default function ScoreOverlay({
   gameLabel,
@@ -16,11 +16,30 @@ export default function ScoreOverlay({
   requestVerify,
   entryId,
   walletMode,
+  onCup,
 }) {
   const [verifying, setVerifying] = useState(false)
   const [verified, setVerified] = useState(false)
   const [sig, setSig] = useState(null)
   const [err, setErr] = useState(null)
+  const [cupBusy, setCupBusy] = useState(false)
+  const [cupDone, setCupDone] = useState(null)
+  const [cupErr, setCupErr] = useState(null)
+
+  async function doCup() {
+    if (cupBusy || cupDone) return
+    setCupBusy(true)
+    setCupErr(null)
+    try {
+      const res = await onCup(score)
+      if (res.ok) setCupDone(res.rank ? `#${res.rank} today` : 'saved')
+      else setCupErr(res.error || 'Cup entry failed')
+    } catch (e) {
+      setCupErr(e?.message || 'Cup entry failed')
+    } finally {
+      setCupBusy(false)
+    }
+  }
 
   async function doVerify() {
     if (!entryId || verifying || verified) return
@@ -75,6 +94,29 @@ export default function ScoreOverlay({
         </div>
       )}
       {err && <div className="quote">{err}</div>}
+
+      {onCup && !cupDone && (
+        <button
+          className="btn gold block"
+          onClick={doCup}
+          disabled={cupBusy}
+          title="Signs this score with your Nimiq wallet to enter the daily Cup"
+        >
+          {cupBusy ? (
+            <>
+              <span className="spin" /> Signing…
+            </>
+          ) : (
+            <>🏆 Enter the NimHouse Cup</>
+          )}
+        </button>
+      )}
+      {cupDone && (
+        <div className="cup-line ok">
+          🏆 Cup entry saved · {cupDone} <span>(top 3 per game take today's pool)</span>
+        </div>
+      )}
+      {cupErr && <div className="cup-line err">{cupErr}</div>}
 
       <div className="btns">
         <div className="row">

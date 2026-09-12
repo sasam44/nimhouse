@@ -31,7 +31,7 @@ function flyPos(t, score) {
   }
 }
 
-export default function NimSwat({ player, onExit, onScore, requestVerify, walletMode }) {
+export default function NimSwat({ player, onExit, onScore, requestVerify, walletMode, requestCup }) {
   const canvasRef = useRef(null)
   const stageRef = useRef(null)
   const controls = useRef({ replay: () => {} })
@@ -392,6 +392,7 @@ export default function NimSwat({ player, onExit, onScore, requestVerify, wallet
               onExit={onExit}
               requestVerify={requestVerify}
               entryId={entry?.id}
+              onCup={requestCup}
               walletMode={walletMode}
             />
           </div>
