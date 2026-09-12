@@ -13,7 +13,34 @@
   },
   "entries": {
     "chick": {
-      "P6902": []
+      "P6902": [],
+      "P6901": [
+        {
+          "device": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "name": "FakeOne",
+          "score": 500,
+          "address": "NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ",
+          "ts": 1789000000000
+        },
+        {
+          "device": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "name": "FakeTwo",
+          "score": 300,
+          "address": "NQ71 4FAKE WINNER 0000 0000 0000 0",
+          "ts": 1789000100000
+        }
+      ]
+    },
+    "bull": {
+      "P6901": [
+        {
+          "device": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "name": "FakeSolo",
+          "score": 120,
+          "address": "",
+          "ts": 1789000200000
+        }
+      ]
     }
   },
   "payouts": {
