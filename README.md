@@ -77,6 +77,17 @@ CUP_ADMIN_SECRET     random secret guarding /api/cup/payout (sent as x-cup-admin
 
 `data/cup.json` is seeded with a `PENDING` wallet; the Cup card auto-enables once the wallet is set.
 
+### Running payouts
+
+After a cup closes, pay the winners from the NimHouse wallet and record the tx hashes with the
+bundled runner (reads the public `data/cup.json`, no GitHub token needed; the admin secret comes
+from `.env.cup-admin`):
+
+```bash
+node scripts/payout.mjs --dry-run   # preview the payout table
+node scripts/payout.mjs             # interactive: paste each tx hash (or s to skip)
+```
+
 ## Quick start
 
 ```bash
