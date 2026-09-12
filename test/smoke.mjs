@@ -76,17 +76,10 @@ check('fair-play strip shown', document.body.textContent.includes('No gambling')
 
 // wallet: outside Nimiq Pay → init() times out (8s) → demo mode
 await sleep(9000)
-check('demo mode badge appears after SDK timeout', document.body.textContent.includes('DEMO'))
 
 const allButtons = () => [...document.querySelectorAll('button')]
-const connectBtn = allButtons().find((b) => b.textContent.includes('Connect wallet'))
-check('connect button present', !!connectBtn)
-connectBtn.dispatchEvent(new window.Event('click', { bubbles: true }))
-await sleep(1500)
-check('wallet connected (simulated address shown)', /NQ71/.test(document.body.textContent))
-check('block number shown', /block\s*[\d,]+/.test(document.body.textContent.replace(/\s+/g, ' ')))
 
-// hamburger menu
+// hamburger menu: player profile + cup history + wallet all live here
 const menuBtn = document.querySelector('.menu-btn')
 check('hamburger menu button present', !!menuBtn)
 menuBtn.dispatchEvent(new window.Event('click', { bubbles: true }))
@@ -97,15 +90,25 @@ check(
     /Cup entries/.test(document.body.textContent) &&
     /Nimiq Pay wallet/.test(document.body.textContent)
 )
-document.querySelector('.menu-close').dispatchEvent(new window.Event('click', { bubbles: true }))
-await sleep(250)
-check('menu closes', !document.querySelector('.menu-panel'))
+check('demo mode badge appears after SDK timeout', document.body.textContent.includes('DEMO'))
 
-// set gamertag (React controlled input needs the native value setter)
+// set gamertag from the menu (React controlled input needs native setter)
 const nameInput = document.querySelector('.name-input')
 const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
 nativeSetter.call(nameInput, 'SmokeTest')
 nameInput.dispatchEvent(new window.Event('input', { bubbles: true }))
+
+// connect wallet from the menu
+const connectBtn = allButtons().find((b) => b.textContent.includes('Connect wallet'))
+check('connect button present (in menu)', !!connectBtn)
+connectBtn.dispatchEvent(new window.Event('click', { bubbles: true }))
+await sleep(1500)
+check('wallet connected (simulated address shown)', /NQ71/.test(document.body.textContent))
+check('block number shown', /block\s*[\d,]+/i.test(document.body.textContent.replace(/\s+/g, ' ')))
+
+document.querySelector('.menu-close').dispatchEvent(new window.Event('click', { bubbles: true }))
+await sleep(250)
+check('menu closes', !document.querySelector('.menu-panel'))
 
 // open NimChick
 const playButtons = allButtons().filter((b) => b.textContent.trim() === 'Play')

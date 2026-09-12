@@ -244,6 +244,7 @@ function MenuPanel({
   wallet,
   connected,
   connecting,
+  connectErr,
   chain,
   accounts,
   player,
@@ -315,15 +316,28 @@ function MenuPanel({
               <span className="spin" /> Detecting Nimiq Pay…
             </div>
           ) : !connected ? (
-            <button className="btn primary block" onClick={onConnect} disabled={connecting}>
-              {connecting ? (
-                <>
-                  <span className="spin" /> Connecting…
-                </>
-              ) : (
-                'Connect wallet'
+            <div>
+              {wallet.mode === 'demo' && (
+                <div className="wallet-meta" style={{ marginBottom: 10 }}>
+                  Running outside Nimiq Pay, so wallet actions are <b>simulated</b>. Open inside
+                  Nimiq Pay for real NIM payments.
+                </div>
               )}
-            </button>
+              <button className="btn primary block" onClick={onConnect} disabled={connecting}>
+                {connecting ? (
+                  <>
+                    <span className="spin" /> Connecting…
+                  </>
+                ) : (
+                  'Connect wallet'
+                )}
+              </button>
+              {connectErr && (
+                <div className="wallet-meta" style={{ color: 'var(--red)' }}>
+                  {connectErr}
+                </div>
+              )}
+            </div>
           ) : (
             <div>
               <div className="wallet-addr">{shortAddr(accounts?.[0])}</div>
@@ -703,74 +717,6 @@ export default function App() {
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0 }}>Nimiq Pay wallet</h3>
-          {wallet && (
-            <span className={`badge ${wallet.mode}`}>{wallet.mode === 'live' ? 'LIVE' : 'DEMO'}</span>
-          )}
-        </div>
-        {!wallet ? (
-          <div className="wallet-meta">
-            <span className="spin" /> Detecting Nimiq Pay…
-          </div>
-        ) : !connected ? (
-          <div>
-            {wallet.mode === 'demo' && (
-              <div className="wallet-meta" style={{ marginBottom: 10 }}>
-                Running outside Nimiq Pay, so wallet actions are <b>simulated</b> — everything stays
-                testable. Open the app inside Nimiq Pay for real NIM payments.
-              </div>
-            )}
-            <button className="btn primary block" onClick={connect} disabled={connecting}>
-              {connecting ? (
-                <>
-                  <span className="spin" /> Connecting…
-                </>
-              ) : (
-                'Connect wallet'
-              )}
-            </button>
-            {connectErr && <div className="wallet-meta" style={{ color: 'var(--red)' }}>{connectErr}</div>}
-          </div>
-        ) : (
-          <div>
-            <div className="wallet-row">
-              <span className="wallet-dot on" />
-              <div className="wallet-meta" style={{ margin: 0 }}>
-                Connected{chain ? ` · block ${(chain.block || 0).toLocaleString()}` : ''}
-              </div>
-            </div>
-            <div className="wallet-addr">{shortAddr(accounts?.[0])}</div>
-            <div className="wallet-meta">
-              Nimiq consensus: {chain ? (chain.consensus ? 'established ✓' : 'not yet…') : 'checking…'}
-            </div>
-            <div className="wallet-actions">
-              <button className="btn small ghost" onClick={refreshChain}>
-                ↻ Refresh status
-              </button>
-              <button className="btn small ghost" onClick={disconnect}>
-                Disconnect
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>Your gamertag</h3>
-        <input
-          className="name-input"
-          value={player}
-          placeholder="e.g. ChickRider"
-          maxLength={16}
-          onChange={(e) => {
-            setPlayer(e.target.value)
-            localStorage.setItem('nimhouse.player', e.target.value)
-          }}
-        />
-      </div>
-
-      <div className="card">
         <h3>Play</h3>
         <div className="games-list">
           {GAMES.map((g) => (
@@ -910,6 +856,7 @@ export default function App() {
           wallet={wallet}
           connected={connected}
           connecting={connecting}
+          connectErr={connectErr}
           chain={chain}
           accounts={accounts}
           player={player}
