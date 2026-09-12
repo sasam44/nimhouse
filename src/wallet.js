@@ -5,7 +5,7 @@ import { init, requestDeviceIdentifier } from '@nimiq/mini-app-sdk'
  * Replace with your real Nimiq Pay address before submitting.
  * (In demo mode this address is only displayed/simulated.)
  */
-export const CHEER_ADDRESS = 'NQ71 4NIMHO USE0 0000 0000 0000 0000 0000 00'
+export const CHEER_ADDRESS = 'NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ'
 
 export const LUNA_PER_NIM = 100000
 
@@ -25,7 +25,7 @@ function randomHex(bytes = 32) {
  * fake data after a short delay so the whole app stays testable.
  */
 function createDemoNimiq() {
-  const address = 'NQ71 4NIMHO USE0 0000 0000 0000 0000 0000 00'
+  const address = 'NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ00 00'
   return {
     _demo: true,
     demoAddress: address,

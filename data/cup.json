@@ -3,7 +3,7 @@
   "pool": {
     "perGameDailyNim": 100,
     "splitPct": [50, 30, 20],
-    "wallet": "PENDING — NimHouse wallet address",
+    "wallet": "NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ",
     "stakeTx": "",
     "note": "Free to play. Every 3-day cup the NimHouse wallet stakes 100 NIM (testnet) per game. Top 3 scores in each game take 50 / 30 / 20 of that cup's pool, paid on-chain at the end of the cup. One entry per device per game per cup — your score is signed by your Nimiq wallet."
   },
