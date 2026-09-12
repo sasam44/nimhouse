@@ -129,6 +129,9 @@ export default function NimHop({ skin, player, onExit, onScore, requestVerify, w
       groundAlive: true,
       lastShown: -1,
     }
+    // The on-screen ◀ ▶ buttons write through the controls ref — alias them to
+    // the same object the frame loop reads so held state actually applies.
+    controls.current.held = st.held
 
     function nextPlat(first) {
       const r = st.rnd

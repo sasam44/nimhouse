@@ -96,22 +96,24 @@ check('NimStack score recorded', stackLb.length > 0)
 await backToHub()
 
 // ---------- NimBullseye ----------
+// 5 levels × 5 darts; a short banner blocks input between levels (one throw may be skipped there).
 await openGame(2)
 check('NimBullseye ready overlay', document.body.textContent.includes('HOLD to charge'))
 view = stage()
 view.dispatchEvent(new window.Event('pointerdown', { bubbles: true })) // start
 await sleep(300)
-for (let i = 0; i < 5; i++) {
+let bullOver = false
+for (let i = 0; i < 34 && !bullOver; i++) {
   view.dispatchEvent(new window.Event('pointerdown', { bubbles: true })) // charge
-  await sleep(450 + i * 120)
+  await sleep(280 + (i % 5) * 60)
   window.dispatchEvent(new window.Event('pointerup')) // release
-  await sleep(700) // flight + pin
+  await sleep(1000) // flight + pin (+ level banner)
+  bullOver = document.body.textContent.includes('Play again')
 }
-await sleep(800)
-check('NimBullseye round ends with game-over overlay', document.body.textContent.includes('Play again'))
+check('NimBullseye ends after 5 levels (25 darts)', bullOver)
 const bullLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.bull') || '[]')
 check('NimBullseye score recorded', bullLb.length > 0)
-check('bullseye score within possible range (0..500)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 500)
+check('bullseye score within possible range (0..2500)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 2500)
 await backToHub()
 
 // ---------- NimRush ----------

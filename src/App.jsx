@@ -11,6 +11,7 @@ import {
   drawSlicePreview,
   drawHopPreview,
 } from './sketch'
+import chickUrl from './assets/chick.png'
 import { loadLB, bestScore, markVerified } from './leaderboard'
 import { sfx } from './sound'
 import NimChick from './games/NimChick'
@@ -39,7 +40,7 @@ const GAMES = [
   {
     id: 'bull',
     name: 'NimBullseye',
-    blurb: 'The dart lands exactly where your crosshair is. Ride the sway — green power = PERFECT ×2.',
+    blurb: 'Five levels of swaying & moving boards. The dart lands exactly where your crosshair is.',
     how: 'hold + release',
     lbLabel: 'Bullseye',
   },
@@ -82,15 +83,7 @@ const shortAddr = (a) => {
 function Logo() {
   return (
     <div className="logo-badge">
-      <svg width="36" height="36" viewBox="0 0 34 34" aria-hidden="true">
-        <circle cx="15" cy="20" r="12" fill="#fff3d6" />
-        <circle cx="12" cy="8.5" r="3.2" fill="#e63946" />
-        <circle cx="17.5" cy="7.2" r="3.2" fill="#e63946" />
-        <polygon points="25,18 33,15.5 33,23 25,21" fill="#ff9f1c" />
-        <circle cx="19.5" cy="16" r="3.4" fill="#fff" />
-        <circle cx="20.5" cy="16.5" r="1.7" fill="#222" />
-        <path d="M25.5 23.2 q1.8 -1.6 3.4 -0.2" stroke="#5b3a1e" strokeWidth="1.3" fill="none" strokeLinecap="round" />
-      </svg>
+      <img className="logo-chick" src={chickUrl} alt="NimHouse chick" draggable="false" />
     </div>
   )
 }

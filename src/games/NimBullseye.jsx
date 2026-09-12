@@ -10,8 +10,9 @@ const H = 600
 const CX = 180
 const CY = 232
 const R = 118
-const DARTS_PER_ROUND = 5
-const SWEET = 72 // ideal power
+const DARTS_PER_LEVEL = 5
+const SWEET = 72 // ideal power (green band center)
+const SWEET_W = 6 // green band half-width
 const DART_SCALE = 1.15
 const TIP_LEN = 24 * DART_SCALE // tip offset inside drawDart local coords
 
@@ -25,22 +26,31 @@ const RINGS = [
   { r: 8, pts: 50, c: '#ffd60a' },
 ]
 
-const QUOTES = [
-  'The board remembers your throws.',
-  'Sharpshooter material, eventually.',
-  'Bullseye dreams, for another round.',
-  'Your arm had opinions today.',
-  'The sway won that round.',
+/**
+ * Five levels of increasing difficulty. The crosshair sways around the home
+ * point; from level 3 the board itself starts drifting (Lissajous motion).
+ * Purely deterministic — same level always behaves the same.
+ */
+const LEVELS = [
+  { swayX: 58, swayY: 32, swaySp: 1.25, boardAx: 0, boardAy: 0, boardSp: 0, label: 'WARM-UP' },
+  { swayX: 68, swayY: 38, swaySp: 1.7, boardAx: 0, boardAy: 0, boardSp: 0, label: 'FAST SWAY' },
+  { swayX: 64, swayY: 36, swaySp: 1.55, boardAx: 46, boardAy: 20, boardSp: 0.55, label: 'MOVING BOARD' },
+  { swayX: 72, swayY: 42, swaySp: 2.0, boardAx: 66, boardAy: 32, boardSp: 0.8, label: 'WIBBLY BOARD' },
+  { swayX: 80, swayY: 46, swaySp: 2.45, boardAx: 78, boardAy: 40, boardSp: 1.05, label: 'CHAOS BOARD' },
 ]
 
-function ringPts(x, y) {
-  const d = Math.hypot(x - CX, y - CY)
+const QUOTES = [
+  'Five boards, twenty-five darts. The wall is full of opinions.',
+  'The chaos board sends its regards.',
+  'Sharpshooter material, eventually.',
+  'Your arm had opinions today.',
+  'The sway won that one. The drift won this one.',
+]
+
+function ringPts(ox, oy) {
+  const d = Math.hypot(ox, oy)
   for (const r of RINGS) if (d <= r.r) return r.pts
   return 0
-}
-
-function aimPos(t) {
-  return { x: CX + Math.sin(t * 1.35) * 62, y: CY + Math.sin(t * 2.1 + 0.8) * 34 }
 }
 
 export default function NimBullseye({ skin, player, onExit, onScore, requestVerify, walletMode }) {
@@ -69,16 +79,35 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
     ctx.scale(dpr, dpr)
 
     const st = {
-      phase: 'ready',
+      phase: 'ready', // ready | playing | over
       t: 0,
-      darts: DARTS_PER_ROUND,
-      thrown: [],
+      level: 0,
+      darts: DARTS_PER_LEVEL,
+      thrown: [], // { ox, oy, pts, perfect } — offsets from the board center
       charging: false,
       chargeStart: 0,
       power: 0,
       fly: null,
       total: 0,
       float: null,
+      banner: null, // { text, sub, t }
+      levelPause: 0,
+    }
+
+    function boardPos(t, lv) {
+      const L = LEVELS[lv]
+      return {
+        x: CX + Math.sin(t * L.boardSp) * L.boardAx,
+        y: CY + Math.sin(t * L.boardSp * 1.3 + 1.7) * L.boardAy,
+      }
+    }
+
+    function aimPos(t, lv) {
+      const L = LEVELS[lv]
+      return {
+        x: CX + Math.sin(t * L.swaySp) * L.swayX,
+        y: CY + Math.sin(t * L.swaySp * 1.55 + 0.8) * L.swayY,
+      }
     }
 
     function start() {
@@ -108,12 +137,22 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       })
     }
 
+    function nextLevel() {
+      st.level += 1
+      st.darts = DARTS_PER_LEVEL
+      st.thrown = []
+      const L = LEVELS[st.level]
+      st.banner = { text: `LEVEL ${st.level + 1}`, sub: L.label, t: 0 }
+      st.levelPause = 45
+      sfx.win()
+    }
+
     function press() {
       if (st.phase === 'ready') {
         start()
         return
       }
-      if (st.phase === 'playing' && !st.fly) {
+      if (st.phase === 'playing' && !st.fly && st.levelPause <= 0) {
         st.charging = true
         st.chargeStart = st.t
       }
@@ -124,20 +163,20 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       st.charging = false
       const p = 100 * (0.5 - 0.5 * Math.cos((st.t - st.chargeStart) * 5.2))
       st.power = p
-      const a = aimPos(st.t)
-      const err = p - SWEET
-      const drift = Math.abs(err) * 1.15
-      let dx = a.x - CX
-      let dy = a.y - CY
-      const len = Math.hypot(dx, dy) || 1
-      dx /= len
-      dy /= len
+      // No hidden drift: the dart lands exactly where the crosshair is.
+      // Power only decides the PERFECT 2× bonus (green band).
+      const perfect = p >= SWEET - SWEET_W && p <= SWEET + SWEET_W
+      const a = aimPos(st.t, st.level)
+      const b = boardPos(st.t, st.level)
       st.fly = {
         t: 0,
         fromX: CX,
         fromY: H + 60,
-        toX: a.x + dx * drift,
-        toY: a.y + dy * drift,
+        toX: a.x,
+        toY: a.y,
+        ox: a.x - b.x,
+        oy: a.y - b.y,
+        perfect,
       }
       sfx.pop()
     }
@@ -145,13 +184,16 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
     controls.current.replay = () => {
       st.phase = 'ready'
       st.t = 0
-      st.darts = DARTS_PER_ROUND
+      st.level = 0
+      st.darts = DARTS_PER_LEVEL
       st.thrown = []
       st.charging = false
       st.power = 0
       st.fly = null
       st.total = 0
       st.float = null
+      st.banner = null
+      st.levelPause = 0
       setScore(0)
       setEntry(null)
       setQuote('')
@@ -169,6 +211,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       if (dt > 3) dt = 3
       st.t += dt / 60
 
+      if (st.levelPause > 0) st.levelPause -= dt
       if (st.charging) {
         st.power = 100 * (0.5 - 0.5 * Math.cos((st.t - st.chargeStart) * 5.2))
       }
@@ -178,10 +221,10 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         if (st.fly.t >= 1) {
           const x = st.fly.toX
           const y = st.fly.toY
-          const basePts = ringPts(x, y)
+          const basePts = ringPts(st.fly.ox, st.fly.oy)
           const perfect = st.fly.perfect
           const pts = perfect ? basePts * 2 : basePts
-          st.thrown.push({ x, y, pts, perfect })
+          st.thrown.push({ ox: st.fly.ox, oy: st.fly.oy, pts, perfect })
           st.total += pts
           st.darts -= 1
           st.float = { x, y, pts, perfect, t: 0 }
@@ -189,7 +232,10 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
           if (perfect && basePts > 0) sfx.win()
           else sfx.thud()
           setScore(st.total)
-          if (st.darts <= 0) finish()
+          if (st.darts <= 0) {
+            if (st.level < LEVELS.length - 1) nextLevel()
+            else finish()
+          }
         }
       }
 
@@ -197,28 +243,32 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         st.float.t += dt
         if (st.float.t > 70) st.float = null
       }
+      if (st.banner) {
+        st.banner.t += dt
+        if (st.banner.t > 95) st.banner = null
+      }
 
       draw(ctx, st)
     }
 
-    function drawBoard(ctx) {
+    function drawBoard(ctx, cx, cy) {
       // soft drop shadow
-      const sh = ctx.createRadialGradient(CX, CY + 14, 30, CX, CY + 14, R + 40)
+      const sh = ctx.createRadialGradient(cx, cy + 14, 30, cx, cy + 14, R + 40)
       sh.addColorStop(0, 'rgba(20,30,50,0.4)')
       sh.addColorStop(1, 'rgba(20,30,50,0)')
       ctx.fillStyle = sh
       ctx.beginPath()
-      ctx.ellipse(CX, CY + 16, R + 34, R + 26, 0, 0, Math.PI * 2)
+      ctx.ellipse(cx, cy + 16, R + 34, R + 26, 0, 0, Math.PI * 2)
       ctx.fill()
 
       // wooden frame
-      const wood = ctx.createLinearGradient(CX - R, CY - R, CX + R, CY + R)
+      const wood = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R)
       wood.addColorStop(0, '#b06a2c')
       wood.addColorStop(0.5, '#8d5524')
       wood.addColorStop(1, '#6e3f16')
       ctx.fillStyle = wood
       ctx.beginPath()
-      ctx.arc(CX, CY, R + 11, 0, Math.PI * 2)
+      ctx.arc(cx, cy, R + 11, 0, Math.PI * 2)
       ctx.fill()
       ctx.strokeStyle = 'rgba(50,25,5,0.6)'
       ctx.lineWidth = 2.5
@@ -228,14 +278,14 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       for (const r of RINGS) {
         ctx.fillStyle = r.c
         ctx.beginPath()
-        ctx.arc(CX, CY, r.r, 0, Math.PI * 2)
+        ctx.arc(cx, cy, r.r, 0, Math.PI * 2)
         ctx.fill()
       }
       // gold bullseye rim
       ctx.strokeStyle = '#e8940a'
       ctx.lineWidth = 2
       ctx.beginPath()
-      ctx.arc(CX, CY, 8, 0, Math.PI * 2)
+      ctx.arc(cx, cy, 8, 0, Math.PI * 2)
       ctx.stroke()
 
       // spokes
@@ -244,33 +294,32 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       for (let i = 0; i < 8; i++) {
         const a = (i * Math.PI) / 4
         ctx.beginPath()
-        ctx.moveTo(CX + Math.cos(a) * 9, CY + Math.sin(a) * 9)
-        ctx.lineTo(CX + Math.cos(a) * (R - 1), CY + Math.sin(a) * (R - 1))
+        ctx.moveTo(cx + Math.cos(a) * 9, cy + Math.sin(a) * 9)
+        ctx.lineTo(cx + Math.cos(a) * (R - 1), cy + Math.sin(a) * (R - 1))
         ctx.stroke()
       }
 
       // 3D dome: highlight top-left, shade bottom-right
-      const hi = ctx.createRadialGradient(CX - 45, CY - 55, 8, CX - 20, CY - 20, R + 30)
+      const hi = ctx.createRadialGradient(cx - 45, cy - 55, 8, cx - 20, cy - 20, R + 30)
       hi.addColorStop(0, 'rgba(255,255,255,0.30)')
       hi.addColorStop(0.5, 'rgba(255,255,255,0.06)')
       hi.addColorStop(1, 'rgba(255,255,255,0)')
       ctx.fillStyle = hi
       ctx.beginPath()
-      ctx.arc(CX, CY, R, 0, Math.PI * 2)
+      ctx.arc(cx, cy, R, 0, Math.PI * 2)
       ctx.fill()
-      const lo = ctx.createRadialGradient(CX + 50, CY + 60, 10, CX + 20, CY + 30, R + 20)
+      const lo = ctx.createRadialGradient(cx + 50, cy + 60, 10, cx + 20, cy + 30, R + 20)
       lo.addColorStop(0, 'rgba(0,0,20,0.28)')
       lo.addColorStop(1, 'rgba(0,0,20,0)')
       ctx.fillStyle = lo
       ctx.beginPath()
-      ctx.arc(CX, CY, R, 0, Math.PI * 2)
+      ctx.arc(cx, cy, R, 0, Math.PI * 2)
       ctx.fill()
     }
 
     /** draw a dart so its TIP is exactly at (tx, ty), pointing up */
     function drawPinnedDart(ctx, tx, ty, scale = DART_SCALE) {
-      // pin shadow
-      ctx.fillStyle = 'rgba(0,0,20,0.35)'
+      ctx.fillStyle = 'rgba(20,30,50,0.35)'
       ctx.beginPath()
       ctx.ellipse(tx + 2, ty + 3, 4 * scale, 2 * scale, 0, 0, Math.PI * 2)
       ctx.fill()
@@ -290,10 +339,11 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       drawCloud(ctx, 60 + Math.sin(st.t * 0.5) * 8, 70, 0.7)
       drawCloud(ctx, 300 + Math.sin(st.t * 0.4 + 2) * 8, 470, 0.6)
 
-      drawBoard(ctx)
+      const b = boardPos(st.t, st.level)
+      drawBoard(ctx, b.x, b.y)
 
-      // pinned darts — TIP exactly at the scored point
-      for (const d of st.thrown) drawPinnedDart(ctx, d.x, d.y)
+      // pinned darts ride the board (stored as offsets from its center)
+      for (const d of st.thrown) drawPinnedDart(ctx, b.x + d.ox, b.y + d.oy)
 
       // flying dart
       if (st.fly) {
@@ -305,8 +355,8 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       }
 
       // aim crosshair
-      if (st.phase === 'playing' && !st.fly) {
-        const a = aimPos(st.t)
+      if (st.phase === 'playing' && !st.fly && st.levelPause <= 0) {
+        const a = aimPos(st.t, st.level)
         ctx.strokeStyle = st.charging ? 'rgba(255,159,28,0.95)' : 'rgba(255,255,255,0.95)'
         ctx.lineWidth = 2.5
         ctx.lineCap = 'round'
@@ -344,6 +394,27 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         ctx.globalAlpha = 1
       }
 
+      // level banner
+      if (st.banner) {
+        const sc = 1 + Math.max(0, 0.3 - st.banner.t * 0.012)
+        ctx.save()
+        ctx.translate(W / 2, 420)
+        ctx.scale(sc, sc)
+        ctx.textAlign = 'center'
+        ctx.lineWidth = 7
+        ctx.lineJoin = 'round'
+        ctx.strokeStyle = 'rgba(255,255,255,0.95)'
+        ctx.font = '800 32px system-ui, sans-serif'
+        ctx.strokeText(st.banner.text, 0, 0)
+        ctx.fillStyle = '#22e07f'
+        ctx.fillText(st.banner.text, 0, 0)
+        ctx.font = '800 15px system-ui, sans-serif'
+        ctx.strokeText(st.banner.sub, 0, 26)
+        ctx.fillStyle = '#2b6cb0'
+        ctx.fillText(st.banner.sub, 0, 26)
+        ctx.restore()
+      }
+
       // ---------- HUD ----------
       ctx.font = '800 30px system-ui, sans-serif'
       ctx.textAlign = 'left'
@@ -355,12 +426,22 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       ctx.fillText(String(st.total), 16, 44)
       ctx.font = '700 10px system-ui, sans-serif'
       ctx.fillStyle = 'rgba(43,70,110,0.7)'
-      ctx.fillText('ROUND TOTAL', 17, 58)
+      ctx.fillText('SCORE', 17, 58)
+
+      // level chip
+      ctx.font = '800 13px system-ui, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.lineWidth = 4
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+      const lvText = `LEVEL ${st.level + 1}/5 · ${LEVELS[st.level].label}`
+      ctx.strokeText(lvText, W / 2, 30)
+      ctx.fillStyle = '#ef476f'
+      ctx.fillText(lvText, W / 2, 30)
 
       // darts left (mini darts)
-      for (let i = 0; i < DARTS_PER_ROUND; i++) {
+      for (let i = 0; i < DARTS_PER_LEVEL; i++) {
         ctx.globalAlpha = i < st.darts ? 1 : 0.25
-        drawDart(ctx, W - 26 - i * 24, 40, Math.PI, skinRef.current, 0.6)
+        drawDart(ctx, W - 26 - i * 24, 46, Math.PI, skinRef.current, 0.6)
       }
       ctx.globalAlpha = 1
 
@@ -373,8 +454,8 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       rr(ctx, mx, mt, mw, mh, 8)
       ctx.fill()
       // sweet band
-      const yTop = mt + mh * (1 - (SWEET + 6) / 100)
-      const yBot = mt + mh * (1 - (SWEET - 6) / 100)
+      const yTop = mt + mh * (1 - (SWEET + SWEET_W) / 100)
+      const yBot = mt + mh * (1 - (SWEET - SWEET_W) / 100)
       ctx.fillStyle = 'rgba(34,224,127,0.55)'
       rr(ctx, mx, yTop, mw, yBot - yTop, 3)
       ctx.fill()
@@ -389,7 +470,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       // fill
       if (st.charging) {
         const fh = (st.power / 100) * (mh - 4)
-        const inSweet = st.power >= SWEET - 6 && st.power <= SWEET + 6
+        const inSweet = st.power >= SWEET - SWEET_W && st.power <= SWEET + SWEET_W
         ctx.fillStyle = inSweet ? '#22e07f' : '#ffb703'
         rr(ctx, mx + 2, mt + 2 + (mh - 4) - fh, mw - 4, fh, 6)
         ctx.fill()
@@ -451,9 +532,10 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
             <div className="panel">
               <h2>NimBullseye</h2>
               <p className="panel-sub">
-                The dart lands exactly where your crosshair is. Ride the sway, release on your ring.
-                Release in the <b style={{ color: 'var(--green)' }}>green band</b> for a PERFECT throw
-                (2× points). Five darts per round.
+                Five levels, five darts each. The dart lands exactly where your crosshair is —
+                ride the sway, release on your ring, and hit the{' '}
+                <b style={{ color: 'var(--green)' }}>green band</b> for a PERFECT throw (2×
+                points). From level 3 the board starts moving…
               </p>
               <p className="panel-hint">HOLD to charge · RELEASE on your ring</p>
             </div>
