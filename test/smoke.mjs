@@ -71,7 +71,7 @@ window.eval(jsCode)
 // ---------- scenario ----------
 await sleep(1200)
 check('hub renders (NimHouse wordmark)', document.body.textContent.includes('NimHouse'))
-check('five game cards listed', ['NimChick', 'NimStack', 'NimBullseye', 'NimRush', 'NimSwat'].every((n) => document.body.textContent.includes(n)))
+check('six game cards listed', ['NimChick', 'NimStack', 'NimBullseye', 'NimRush', 'NimSwat', 'NimCannon'].every((n) => document.body.textContent.includes(n)))
 check('fair-play strip shown', document.body.textContent.includes('No gambling'))
 
 // wallet: outside Nimiq Pay → init() times out (8s) → demo mode
@@ -94,7 +94,7 @@ nameInput.dispatchEvent(new window.Event('input', { bubbles: true }))
 
 // open NimChick
 const playButtons = allButtons().filter((b) => b.textContent.trim() === 'Play')
-check('play buttons present (5)', playButtons.length === 5)
+check('play buttons present (6)', playButtons.length === 6)
 playButtons[0].dispatchEvent(new window.Event('click', { bubbles: true }))
 await sleep(600)
 check('NimChick ready overlay', document.body.textContent.includes('TAP or SPACE to flap'))

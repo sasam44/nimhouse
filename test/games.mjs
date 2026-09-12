@@ -153,6 +153,36 @@ for (let i = 0; i < 12 && !over; i++) {
 check('NimSwat ends after 5 misses (fly escapes)', over)
 const swatLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.swat') || '[]')
 check('NimSwat score recorded', swatLb.length > 0)
+await backToHub()
+
+// ---------- NimCannon ----------
+// 3 fixed launches consume all shots (targets remain) → deterministic game over.
+await openGame(5)
+check('NimCannon ready overlay', document.body.textContent.includes('DRAG & RELEASE to launch'))
+view = stage()
+function fireCannon() {
+  const down = new window.Event('pointerdown', { bubbles: true })
+  Object.defineProperty(down, 'clientX', { value: 280 })
+  Object.defineProperty(down, 'clientY', { value: 480 })
+  view.dispatchEvent(down)
+  const mv = new window.Event('pointermove', { bubbles: true })
+  Object.defineProperty(mv, 'clientX', { value: 20 })
+  Object.defineProperty(mv, 'clientY', { value: 560 })
+  view.dispatchEvent(mv)
+  const up = new window.Event('pointerup', { bubbles: true })
+  view.dispatchEvent(up)
+}
+fireCannon()
+await sleep(4500) // flight + bounces + settle → back to aim
+fireCannon()
+await sleep(4500)
+fireCannon()
+await sleep(4500)
+over = document.body.textContent.includes('Play again')
+check('NimCannon ends after 3 shots', over)
+const cannonLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.cannon') || '[]')
+check('NimCannon score recorded', cannonLb.length > 0)
+check('cannon score is a multiple of 10', cannonLb.length > 0 && cannonLb[0].score % 10 === 0)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)

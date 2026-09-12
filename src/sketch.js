@@ -498,6 +498,107 @@ export function drawRushPreview(ctx, w, h, skin) {
   drawChicken(ctx, w / 2 - 12, h - 18, 0.85, skin, 0.6, 0.8)
 }
 
+/** Cartoon sausage with a surprised face (no shadow). */
+export function drawSausage(ctx, x, y, s) {
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(s, s)
+  ctx.fillStyle = '#c1613b'
+  rr(ctx, -22, -9, 44, 18, 9)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'
+  ctx.lineWidth = 1.6
+  rr(ctx, -22, -9, 44, 18, 9)
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(90,35,10,0.5)'
+  ctx.lineWidth = 1.8
+  ctx.beginPath()
+  ctx.moveTo(-14, -6)
+  ctx.lineTo(-17, 6)
+  ctx.moveTo(14, -6)
+  ctx.lineTo(17, 6)
+  ctx.stroke()
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'
+  rr(ctx, -17, -6.5, 34, 4, 2)
+  ctx.fill()
+  // absurd surprised face
+  ctx.fillStyle = '#fff'
+  ctx.beginPath()
+  ctx.arc(-5, -1, 2.8, 0, Math.PI * 2)
+  ctx.arc(5, -1, 2.8, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#222'
+  ctx.beginPath()
+  ctx.arc(-5, -1, 1.2, 0, Math.PI * 2)
+  ctx.arc(5, -1, 1.2, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#222'
+  ctx.lineWidth = 1.3
+  ctx.beginPath()
+  ctx.arc(0, 3.5, 2, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.restore()
+}
+
+/** Mini slingshot + trajectory + sausages (NimCannon card thumbnail). */
+export function drawCannonPreview(ctx, w, h, skin) {
+  ctx.clearRect(0, 0, w, h)
+  // ground
+  ctx.fillStyle = '#7ed957'
+  ctx.fillRect(0, h - 12, w, 12)
+  // slingshot
+  ctx.lineCap = 'round'
+  ctx.strokeStyle = '#6e3f16'
+  ctx.lineWidth = 5
+  ctx.beginPath()
+  ctx.moveTo(w * 0.26, h - 13)
+  ctx.lineTo(w * 0.26, h * 0.4)
+  ctx.moveTo(w * 0.26, h * 0.4)
+  ctx.lineTo(w * 0.17, h * 0.28)
+  ctx.moveTo(w * 0.26, h * 0.4)
+  ctx.lineTo(w * 0.35, h * 0.28)
+  ctx.stroke()
+  ctx.strokeStyle = '#a8672f'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(w * 0.26, h - 13)
+  ctx.lineTo(w * 0.26, h * 0.4)
+  ctx.moveTo(w * 0.26, h * 0.4)
+  ctx.lineTo(w * 0.17, h * 0.28)
+  ctx.moveTo(w * 0.26, h * 0.4)
+  ctx.lineTo(w * 0.35, h * 0.28)
+  ctx.stroke()
+  // stretched band + pulled chick
+  ctx.strokeStyle = '#ef476f'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.moveTo(w * 0.17, h * 0.28)
+  ctx.lineTo(w * 0.27, h * 0.55)
+  ctx.lineTo(w * 0.35, h * 0.28)
+  ctx.stroke()
+  drawChicken(ctx, w * 0.27, h * 0.53, 0.6, skin, 0.6, 0.5, -0.25)
+  // dotted trajectory
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'
+  for (let i = 0; i < 7; i++) {
+    const t = i / 6
+    const x = w * 0.34 + t * w * 0.6
+    const y = h * 0.5 - Math.sin(t * Math.PI) * h * 0.34
+    ctx.beginPath()
+    ctx.arc(x, y, 2.1, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // sausage targets on crates
+  ctx.fillStyle = '#c9853f'
+  ctx.fillRect(w * 0.72, h - 26, 16, 14)
+  ctx.fillRect(w * 0.86, h - 26, 16, 14)
+  ctx.strokeStyle = '#8d5524'
+  ctx.lineWidth = 1.5
+  ctx.strokeRect(w * 0.72, h - 26, 16, 14)
+  ctx.strokeRect(w * 0.86, h - 26, 16, 14)
+  drawSausage(ctx, w * 0.77, h - 34, 0.55)
+  drawSausage(ctx, w * 0.91, h - 34, 0.55)
+}
+
 /** Fly + swatter + BONK (NimSwat thumbnail). */
 export function drawSwatPreview(ctx, w, h) {
   ctx.clearRect(0, 0, w, h)

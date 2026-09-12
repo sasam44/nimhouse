@@ -1,6 +1,6 @@
 # 🐔 NimHouse
 
-**Skill-based mini games inside Nimiq Pay.** One house, five games, real NIM integration — and zero
+**Skill-based mini games inside Nimiq Pay.** One house, six games, real NIM integration — and zero
 gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompetition.com) (Cycle II).
 
 | Game | Loop | Skill |
@@ -10,6 +10,7 @@ gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompetitio
 | **NimBullseye** | Dart throwing: ride the swaying crosshair, green band = PERFECT ×2 | feel & judgment |
 | **NimRush** | Pseudo-3D chicken runner — weave through cows, UFOs, giant sausages | reflexes |
 | **NimSwat** | One angry mustachioed fly; tap it before it gets too fast (5 misses = escape) | moving-target accuracy |
+| **NimCannon** | Slingshot ballistics — fling your chick through sausage towers, 3 shots/level | arc reading |
 
 ## Why NimHouse
 
@@ -82,6 +83,7 @@ src/
   games/NimBullseye.jsx   dart engine
   games/NimRush.jsx       pseudo-3D lane-dodge runner
   games/NimSwat.jsx       moving-target swatter
+  games/NimCannon.jsx     ballistic slingshot vs sausage towers
   components/ScoreOverlay.jsx  shared round-over + verify flow
 ```
 
