@@ -9,15 +9,15 @@
 
 ## 1. Description (≤250 words) — paste this into the portal
 
-> NimHouse is a skill-based mini game house inside Nimiq Pay, bundling three original games: NimChick, a Flappy Bird–style flapper starring an absurd mustached chicken; NimStack, a precision block-stacking game where every overhang gets sliced off; and NimBullseye, a dart game where you read a swaying aim and time your power release. Every game is 100% player skill — no entry fees, no betting, no chance-based outcomes.
+> NimHouse is a skill-based mini game house inside Nimiq Pay, bundling five original games: NimChick, a Flappy Bird–style flapper starring an absurd mustached chicken; NimStack, where blocks float overhead and drop onto a shrinking tower; NimBullseye, a dart game with a swaying crosshair and PERFECT double-point throws; NimRush, a pseudo-3D chicken runner weaving through cows, UFOs and giant sausages; and NimSwat, a reflex duel against one angry, mustachioed fly. Every game is 100% player skill — no entry fees, no betting, no chance-based outcomes.
 >
-> Nimiq Pay is wired into the core experience, not the footer. Players connect their wallet, watch live consensus and block status, buy cosmetic-only skins (chicken outfits, darts, block themes) by paying NIM directly through Nimiq Pay transactions with on-chain purchase notes, cheer other players by sending NIM with a custom message, and earn a verified badge on their scores by signing a tamper-proof record of their run with their wallet. A per-device leaderboard tracks the best runs, and wallet-verified entries stand out.
+> Nimiq Pay is wired into the core experience, not the footer. Players connect their wallet, watch live consensus and block status, buy cosmetic-only skins by paying NIM through Nimiq Pay transactions with on-chain purchase notes, cheer players with NIM tips and on-chain messages, and earn a verified badge by signing a tamper-proof score record with their wallet. A per-device leaderboard tracks the best runs; wallet-verified entries stand out.
 >
-> NimHouse is for anyone who wants a quick, polished play session inside their wallet — a student killing five minutes between classes, a creator rewarding their community, or a player who wants a game that respects them: no ads, no pay-to-win, no gambling. Skins never affect gameplay.
+> NimHouse is for anyone who wants a quick, polished play session inside their wallet — no ads, no pay-to-win, no gambling. Skins never affect gameplay.
 >
-> Built with the Nimiq Pay Mini Apps Framework (Vite, React, @nimiq/mini-app-sdk) using NIM-native APIs: listAccounts, sendBasicTransactionWithData, sign, consensus and block checks, and device identifiers for leaderboards. 100% open source under the MIT license, with a transparent demo mode so the app stays fully testable even outside Nimiq Pay. Playable the moment you open it.
+> Built with the Nimiq Pay Mini Apps Framework (Vite, React, @nimiq/mini-app-sdk) using NIM-native APIs: listAccounts, sendBasicTransactionWithData, sign, consensus and block checks, and device identifiers for leaderboards. 100% open source under the MIT license, with a transparent demo mode that keeps the app fully testable outside Nimiq Pay. Playable the moment you open it.
 
-*Word count: 247 — verify with the portal.*
+*Word count: verify below — must be ≤250 for the portal.*
 
 ## 2. Submission checklist
 

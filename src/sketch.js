@@ -361,6 +361,160 @@ export function drawBoardPreview(ctx, w, h, dartSkin) {
   if (dartSkin) drawDart(ctx, cx, cy + 24 * 0.55, 0, dartSkin, 0.55)
 }
 
+/** Angry mustachioed fly with red sunglasses. */
+export function drawFly(ctx, x, y, s, t, angry = false) {
+  ctx.save()
+  ctx.translate(x, y)
+  // buzzing wings
+  const flap = Math.sin(t * 45) * 0.5
+  ctx.fillStyle = 'rgba(225,238,255,0.8)'
+  for (const d of [-1, 1]) {
+    ctx.save()
+    ctx.translate(d * 4 * s, -3 * s)
+    ctx.rotate(d * (0.7 + flap))
+    ctx.beginPath()
+    ctx.ellipse(d * 6 * s, -4 * s, 8 * s, 4.4 * s, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  }
+  // body
+  const g = ctx.createRadialGradient(-2 * s, -2 * s, 1, 0, 0, 8 * s)
+  g.addColorStop(0, '#4d5f80')
+  g.addColorStop(1, '#222b3d')
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(0, 0, 7.5 * s, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'
+  ctx.lineWidth = 1.2 * s
+  ctx.stroke()
+  // red sunglasses
+  ctx.fillStyle = '#e63946'
+  rr(ctx, -6.2 * s, -3.4 * s, 5.4 * s, 3.8 * s, 1.4 * s)
+  ctx.fill()
+  rr(ctx, 0.8 * s, -3.4 * s, 5.4 * s, 3.8 * s, 1.4 * s)
+  ctx.fill()
+  ctx.fillRect(-1.4 * s, -2.4 * s, 2.8 * s, 1.1 * s)
+  // absurd mustache
+  ctx.strokeStyle = '#10131a'
+  ctx.lineWidth = 1.2 * s
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(-4 * s, 2.6 * s)
+  ctx.quadraticCurveTo(-6.6 * s, 1.6 * s, -8.2 * s, 3 * s)
+  ctx.moveTo(4 * s, 2.6 * s)
+  ctx.quadraticCurveTo(6.6 * s, 1.6 * s, 8.2 * s, 3 * s)
+  ctx.stroke()
+  // angry brows
+  if (angry) {
+    ctx.strokeStyle = '#10131a'
+    ctx.lineWidth = 1.5 * s
+    ctx.beginPath()
+    ctx.moveTo(-6.4 * s, -6.4 * s)
+    ctx.lineTo(-2 * s, -4.8 * s)
+    ctx.moveTo(6.4 * s, -6.4 * s)
+    ctx.lineTo(2 * s, -4.8 * s)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+/** Cartoon fly swatter. Origin at the mesh center. */
+export function drawSwatter(ctx, x, y, s, angle = -0.5) {
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.rotate(angle)
+  ctx.scale(s, s)
+  // handle
+  ctx.strokeStyle = '#c98a4b'
+  ctx.lineWidth = 5
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(4, 16)
+  ctx.lineTo(16, 38)
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)'
+  ctx.lineWidth = 1.4
+  ctx.stroke()
+  // mesh
+  ctx.fillStyle = '#ef476f'
+  rr(ctx, -26, -28, 52, 46, 11)
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)'
+  ctx.lineWidth = 2.5
+  rr(ctx, -26, -28, 52, 46, 11)
+  ctx.stroke()
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)'
+  ctx.lineWidth = 1.2
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath()
+    ctx.moveTo(-20 + i * 12, -23)
+    ctx.lineTo(-20 + i * 12, 13)
+    ctx.stroke()
+  }
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath()
+    ctx.moveTo(-22, -19 + i * 11)
+    ctx.lineTo(22, -19 + i * 11)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+/** Pseudo-3D road with a cow and the player chicken (NimRush thumbnail). */
+export function drawRushPreview(ctx, w, h, skin) {
+  ctx.clearRect(0, 0, w, h)
+  const hy = h * 0.4
+  // road
+  ctx.fillStyle = '#6d7686'
+  ctx.beginPath()
+  ctx.moveTo(w * 0.5 - 6, hy)
+  ctx.lineTo(w * 0.5 + 6, hy)
+  ctx.lineTo(w - 8, h)
+  ctx.lineTo(8, h)
+  ctx.closePath()
+  ctx.fill()
+  // lane lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)'
+  ctx.lineWidth = 2
+  ctx.setLineDash([5, 5])
+  for (const off of [-1, 1]) {
+    ctx.beginPath()
+    ctx.moveTo(w / 2 + off * 4, hy + 2)
+    ctx.lineTo(w / 2 + off * (w * 0.3), h)
+    ctx.stroke()
+  }
+  ctx.setLineDash([])
+  // little cow ahead
+  ctx.fillStyle = '#fff'
+  ctx.beginPath()
+  ctx.ellipse(w / 2 + 13, hy + 9, 9, 6, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#222'
+  ctx.beginPath()
+  ctx.arc(w / 2 + 10, hy + 7, 2.4, 0, Math.PI * 2)
+  ctx.fill()
+  // player chicken
+  drawChicken(ctx, w / 2 - 12, h - 18, 0.85, skin, 0.6, 0.8)
+}
+
+/** Fly + swatter + BONK (NimSwat thumbnail). */
+export function drawSwatPreview(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h)
+  ctx.fillStyle = 'rgba(255,183,77,0.3)'
+  ctx.fillRect(0, h * 0.62, w, h * 0.38)
+  drawFly(ctx, w * 0.64, h * 0.3, 1.15, 0.6)
+  drawSwatter(ctx, w * 0.36, h * 0.6, 0.8)
+  ctx.font = '800 14px system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.lineWidth = 3.5
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'
+  ctx.strokeText('BONK!', w * 0.62, h * 0.6)
+  ctx.fillStyle = '#ffd60a'
+  ctx.fillText('BONK!', w * 0.62, h * 0.6)
+}
+
 /** Small stack of blocks (card / skin thumbnail). */
 export function drawStackPreview(ctx, hue, w, h) {
   ctx.clearRect(0, 0, w, h)

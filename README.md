@@ -1,13 +1,15 @@
 # 🐔 NimHouse
 
-**Skill-based mini games inside Nimiq Pay.** One house, three games, real NIM integration — and zero
+**Skill-based mini games inside Nimiq Pay.** One house, five games, real NIM integration — and zero
 gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompetition.com) (Cycle II).
 
 | Game | Loop | Skill |
 | --- | --- | --- |
 | **NimChick** | Flappy-Bird-style flapper starring an absurd mustached chicken | flap timing |
-| **NimStack** | Precision block stacking — overhangs get sliced off | timing & precision |
-| **NimBullseye** | Dart throwing: read the swaying aim, time the power meter | feel & judgment |
+| **NimStack** | Blocks float overhead; drop them onto the shrinking tower | timing & precision |
+| **NimBullseye** | Dart throwing: ride the swaying crosshair, green band = PERFECT ×2 | feel & judgment |
+| **NimRush** | Pseudo-3D chicken runner — weave through cows, UFOs, giant sausages | reflexes |
+| **NimSwat** | One angry mustachioed fly; tap it before it gets too fast (5 misses = escape) | moving-target accuracy |
 
 ## Why NimHouse
 
@@ -76,8 +78,10 @@ src/
   leaderboard.js          per-device leaderboard (localStorage)
   sound.js                WebAudio SFX (no assets)
   games/NimChick.jsx      flapper engine
-  games/NimStack.jsx      stacking engine
+  games/NimStack.jsx      drop-stacking engine
   games/NimBullseye.jsx   dart engine
+  games/NimRush.jsx       pseudo-3D lane-dodge runner
+  games/NimSwat.jsx       moving-target swatter
   components/ScoreOverlay.jsx  shared round-over + verify flow
 ```
 

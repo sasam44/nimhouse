@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getWallet, CHEER_ADDRESS, LUNA_PER_NIM, fmtNim, shortHash } from './wallet'
 import { SKIN_GROUPS } from './skins'
-import { drawChicken, drawDart, drawStackPreview, drawBoardPreview } from './sketch'
+import {
+  drawChicken,
+  drawDart,
+  drawStackPreview,
+  drawBoardPreview,
+  drawRushPreview,
+  drawSwatPreview,
+} from './sketch'
 import { loadLB, bestScore, markVerified } from './leaderboard'
 import { sfx } from './sound'
 import NimChick from './games/NimChick'
 import NimStack from './games/NimStack'
 import NimBullseye from './games/NimBullseye'
+import NimRush from './games/NimRush'
+import NimSwat from './games/NimSwat'
 
 const GAMES = [
   {
@@ -29,6 +38,20 @@ const GAMES = [
     blurb: 'The dart lands exactly where your crosshair is. Ride the sway — green power = PERFECT ×2.',
     how: 'hold + release',
     lbLabel: 'Bullseye',
+  },
+  {
+    id: 'rush',
+    name: 'NimRush',
+    blurb: 'Pseudo-3D road, full speed, zero brakes. Weave through cows, UFOs & giant sausages.',
+    how: 'tap left / right',
+    lbLabel: 'Rush',
+  },
+  {
+    id: 'swat',
+    name: 'NimSwat',
+    blurb: 'One angry fly with a mustache. Tap it before it gets too fast. 5 misses = it escapes.',
+    how: 'tap the fly',
+    lbLabel: 'Swat',
   },
 ]
 
@@ -63,7 +86,9 @@ function GameThumb({ kind, skin, dartSkin }) {
     ctx.clearRect(0, 0, 76, 76)
     if (kind === 'chick') drawChicken(ctx, 36, 46, 1.05, skin, 0.6, 0.9)
     else if (kind === 'stack') drawStackPreview(ctx, skin?.hue ?? 158, 76, 76)
-    else drawBoardPreview(ctx, 76, 76, dartSkin)
+    else if (kind === 'bull') drawBoardPreview(ctx, 76, 76, dartSkin)
+    else if (kind === 'rush') drawRushPreview(ctx, 76, 76, skin)
+    else drawSwatPreview(ctx, 76, 76)
   }, [kind, skin, dartSkin])
   return <canvas ref={ref} className="game-thumb" width={76} height={76} />
 }
@@ -278,7 +303,13 @@ export default function App() {
 
   // ---------------- derived ----------------
   const bests = useMemo(
-    () => ({ chick: bestScore('chick'), stack: bestScore('stack'), bull: bestScore('bull') }),
+    () => ({
+      chick: bestScore('chick'),
+      stack: bestScore('stack'),
+      bull: bestScore('bull'),
+      rush: bestScore('rush'),
+      swat: bestScore('swat'),
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [view, lbTick]
   )
@@ -324,6 +355,22 @@ export default function App() {
     return (
       <>
         <NimBullseye skin={dartSkin} {...gameProps} requestVerify={(id) => verifyScore('bull', id)} />
+        {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
+      </>
+    )
+  }
+  if (view === 'rush') {
+    return (
+      <>
+        <NimRush skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('rush', id)} />
+        {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
+      </>
+    )
+  }
+  if (view === 'swat') {
+    return (
+      <>
+        <NimSwat {...gameProps} requestVerify={(id) => verifyScore('swat', id)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -426,7 +473,7 @@ export default function App() {
             <div className="game-card" key={g.id}>
               <GameThumb
                 kind={g.id}
-                skin={g.id === 'chick' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
+                skin={g.id === 'chick' || g.id === 'rush' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
                 dartSkin={dartSkin}
               />
               <div className="game-info">

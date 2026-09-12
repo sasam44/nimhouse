@@ -112,6 +112,47 @@ check('NimBullseye round ends with game-over overlay', document.body.textContent
 const bullLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.bull') || '[]')
 check('NimBullseye score recorded', bullLb.length > 0)
 check('bullseye score within possible range (0..500)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 500)
+await backToHub()
+
+// ---------- NimRush ----------
+// Round-robin lane spawning guarantees an obstacle in every lane within 3 spawns,
+// so holding one lane always ends the run deterministically.
+await openGame(3)
+check('NimRush ready overlay', document.body.textContent.includes('TAP LEFT / RIGHT'))
+view = stage()
+view.dispatchEvent(new window.Event('pointerdown', { bubbles: true })) // start
+await sleep(400)
+over = false
+for (let i = 0; i < 16 && !over; i++) {
+  const ev = new window.Event('pointerdown', { bubbles: true })
+  Object.defineProperty(ev, 'clientX', { value: 10 }) // always steer left → lane 0
+  view.dispatchEvent(ev)
+  await sleep(500)
+  over = document.body.textContent.includes('Play again')
+}
+check('NimRush run ends (obstacle hit)', over)
+const rushLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.rush') || '[]')
+check('NimRush score recorded', rushLb.length > 0)
+await backToHub()
+
+// ---------- NimSwat ----------
+await openGame(4)
+check('NimSwat ready overlay', document.body.textContent.includes('flimsy swatter'))
+view = stage()
+view.dispatchEvent(new window.Event('pointerdown', { bubbles: true })) // start
+await sleep(300)
+over = false
+for (let i = 0; i < 12 && !over; i++) {
+  const ev = new window.Event('pointerdown', { bubbles: true })
+  Object.defineProperty(ev, 'clientX', { value: 15 }) // far corner → always a miss
+  Object.defineProperty(ev, 'clientY', { value: 590 })
+  view.dispatchEvent(ev)
+  await sleep(450)
+  over = document.body.textContent.includes('Play again')
+}
+check('NimSwat ends after 5 misses (fly escapes)', over)
+const swatLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.swat') || '[]')
+check('NimSwat score recorded', swatLb.length > 0)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)
