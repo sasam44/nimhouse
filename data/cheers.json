@@ -1,14 +1,4 @@
 {
   "version": 1,
-  "cheers": [
-    {
-      "id": "cmtzj5vsph43m",
-      "name": "Sasam",
-      "message": "dup",
-      "value": 1000,
-      "device": "",
-      "txHash": "0x000000000000000000000000000000000000000000000000000000000000e2e1",
-      "ts": 1757760000000
-    }
-  ]
+  "cheers": []
 }

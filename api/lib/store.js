@@ -27,6 +27,7 @@ const SEEDS = {
     payouts: {},
   }),
   'data/names.json': () => ({ version: 1, names: {} }),
+  'data/cheers.json': () => ({ version: 1, cheers: [] }),
 }
 
 function repo() {

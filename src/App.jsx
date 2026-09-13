@@ -130,6 +130,76 @@ const CUP_NAMES = {
   dash: 'NimDash',
 }
 
+function CheerBoard({ tick }) {
+  const [cheers, setCheers] = useState(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    if (typeof fetch === 'undefined') {
+      setFailed(true)
+      return
+    }
+    let alive = true
+    fetch('/api/cheer')
+      .then((r) => r.json())
+      .then((j) => {
+        if (!alive) return
+        if (j.ok) {
+          setCheers(j.cheers)
+          setFailed(false)
+        } else setFailed(true)
+      })
+      .catch(() => alive && setFailed(true))
+    return () => {
+      alive = false
+    }
+  }, [tick])
+
+  if (!cheers && !failed) return <div className="cup-note">Loading the cheer board…</div>
+  if (failed || cheers.length === 0)
+    return (
+      <div className="cup-note">
+        {cheers && cheers.length === 0 ? (
+          <>No cheers on the board yet — be the first to cheer the house 🐔</>
+        ) : (
+          'Cheer board unavailable right now.'
+        )}
+      </div>
+    )
+
+  const top = [...cheers].sort((a, b) => b.value - a.value).slice(0, 3)
+  const recent = cheers.slice(0, 6)
+  return (
+    <div className="cheer-board">
+      {top.length > 0 && (
+        <>
+          <div className="menu-sub">Top cheers</div>
+          {top.map((c, i) => (
+            <div className="cheer-row" key={c.id + 'top'}>
+              <b>{['🥇', '🥈', '🥉'][i]}</b> {c.name} <b>{fmtNim(c.value)}</b>
+              {c.message && <span className="cheer-quote"> “{c.message}”</span>}
+            </div>
+          ))}
+        </>
+      )}
+      <div className="menu-sub">Latest words</div>
+      {recent.map((c) => (
+        <div className="cheer-row" key={c.id}>
+          <span>{c.name}</span>
+          <span className="cheer-amount">{fmtNim(c.value)}</span>
+          {c.message && <span className="cheer-quote">“{c.message}”</span>}
+          <span className="cheer-hash" title="on-chain tx hash">
+            tx {String(c.txHash).slice(0, 6)}…{String(c.txHash).slice(-4)}
+          </span>
+        </div>
+      ))}
+      <p className="cup-note">
+        Every cheer is a real NIM payment to the NimHouse community wallet — the full public
+        ledger lives in the open-source repo; verify any entry by its on-chain tx hash.
+      </p>
+    </div>
+  )
+}
+
 /** Local, per-device record of Cup entries (for the profile's win history). */
 function recordCupResult(game, periodId, score, rank) {
   try {
@@ -460,6 +530,7 @@ export default function App() {
   const [cheerMsg, setCheerMsg] = useState('')
   const [lbTab, setLbTab] = useState('chick')
   const [lbTick, setLbTick] = useState(0)
+  const [cheerTick, setCheerTick] = useState(0)
 
   // toast
   const [toast, setToast] = useState(null)
@@ -710,6 +781,28 @@ export default function App() {
       })
       if (hash && hash.error) throw new Error(hash.error.message || 'Transaction failed')
       setLastTx(`Cheer sent · ${shortHash(hash)}`)
+      // publish to the public cheer board (best-effort — the payment is on-chain either way)
+      if (wallet.mode === 'live') {
+        getDeviceId().then(async (device) => {
+          try {
+            await fetch('/api/cheer', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: player || 'Anonymous',
+                message: msg,
+                value,
+                txHash: hash,
+                device,
+                ts: Date.now(),
+              }),
+            })
+            setCheerTick((t) => t + 1)
+          } catch {
+            /* board sync failed silently — tx hash remains verifiable */
+          }
+        })
+      }
       sfx.win()
       toastMsg(
         wallet.mode === 'demo'
@@ -946,6 +1039,7 @@ export default function App() {
           address{wallet?.mode === 'demo' ? ' (simulated in demo mode)' : ''}. It is a tip, not an
           entry fee — nobody pays to play, ever.
         </div>
+        <CheerBoard tick={cheerTick} />
       </div>
 
       <div className="card">
