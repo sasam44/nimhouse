@@ -178,41 +178,38 @@ check('NimSlice score recorded', sliceLb.length > 0)
 check('slice score is a multiple of 5', sliceLb.length > 0 && sliceLb[0].score % 5 === 0)
 await backToHub()
 
-// ---------- NimKnife ----------
-// No throws in jsdom → chick rides down level 1 untouched (~13s, deterministic
-// descent) → block-smash level 2 begins → unsmashed blocks reach the orbiting
-// chick and drain the 3 hearts → game over.
+// ---------- NimRooftop ----------
+// Fixed-seed course. A few real jumps (regression guard: input handlers must
+// not throw) — then the idle chick runs straight into gaps until the 3 hearts
+// drain → game over.
 await openGame(6)
-check('NimKnife ready overlay', document.body.textContent.includes('TAP or SPACE to throw'))
+check('NimRooftop ready overlay', document.body.textContent.includes('TAP to jump'))
 view = stage()
-const kDown = new window.Event('pointerdown', { bubbles: true })
-Object.defineProperty(kDown, 'clientX', { value: 180 })
-Object.defineProperty(kDown, 'clientY', { value: 400 })
-view.dispatchEvent(kDown)
-const kUp = new window.Event('pointerup', { bubbles: true })
-window.dispatchEvent(kUp)
-// a few real throws during level 1 (within the 1.5s grace → they must stick
-// safely; any runtime error here would have broken the run)
-const failsBefore = failures
-await sleep(650)
-for (let i = 0; i < 3; i++) {
+const rDown = new window.Event('pointerdown', { bubbles: true })
+Object.defineProperty(rDown, 'clientX', { value: 180 })
+Object.defineProperty(rDown, 'clientY', { value: 400 })
+view.dispatchEvent(rDown)
+window.dispatchEvent(new window.Event('pointerup', { bubbles: true }))
+const rFailsBefore = failures
+await sleep(500)
+for (let i = 0; i < 4; i++) {
   const td = new window.Event('pointerdown', { bubbles: true })
   Object.defineProperty(td, 'clientX', { value: 180 })
-  Object.defineProperty(td, 'clientY', { value: 500 })
+  Object.defineProperty(td, 'clientY', { value: 400 })
   view.dispatchEvent(td)
   window.dispatchEvent(new window.Event('pointerup', { bubbles: true }))
-  await sleep(420)
+  await sleep(650)
 }
-check('knife throws run without runtime errors', failures === failsBefore)
-await sleep(14000) // level 1 descent completes — still alive
-over = document.body.textContent.includes('Play again')
-check('NimKnife still alive after level 1 (chick reached the bottom)', !over)
-await sleep(16000) // block storm drains 3 hearts
-over = document.body.textContent.includes('Play again')
-check('NimKnife ends when hearts run out', over)
-const knifeLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.knife') || '[]')
-check('NimKnife score recorded', knifeLb.length > 0)
-check('knife score is a non-negative integer', knifeLb.length > 0 && Number.isInteger(knifeLb[0].score) && knifeLb[0].score >= 0)
+check('rooftop jumps run without runtime errors', failures === rFailsBefore)
+let runOver = false
+for (let i = 0; i < 45 && !runOver; i++) {
+  await sleep(1000)
+  runOver = document.body.textContent.includes('Play again')
+}
+check('NimRooftop ends when hearts run out', runOver)
+const runLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.run') || '[]')
+check('NimRooftop score recorded', runLb.length > 0)
+check('run score is a non-negative integer', runLb.length > 0 && Number.isInteger(runLb[0].score) && runLb[0].score >= 0)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)

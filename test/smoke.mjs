@@ -71,7 +71,7 @@ window.eval(jsCode)
 // ---------- scenario ----------
 await sleep(1200)
 check('hub renders (NimHouse wordmark)', document.body.textContent.includes('NimHouse'))
-check('seven game cards listed', ['NimChick', 'NimStack', 'NimBullseye', 'NimRush', 'NimSwat', 'NimSlice', 'NimKnife'].every((n) => document.body.textContent.includes(n)))
+check('seven game cards listed', ['NimChick', 'NimStack', 'NimBullseye', 'NimRush', 'NimSwat', 'NimSlice', 'NimRooftop'].every((n) => document.body.textContent.includes(n)))
 check('fair-play strip shown', document.body.textContent.includes('No gambling'))
 
 // wallet: outside Nimiq Pay → init() times out (8s) → demo mode

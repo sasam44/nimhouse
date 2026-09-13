@@ -4,7 +4,7 @@
  */
 import { readCup } from './lib/store.js'
 
-export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'knife']
+export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'run']
 
 /**
  * 3-day cup periods (UTC). P{n} covers days [3n, 3n+3) since the epoch.
