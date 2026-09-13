@@ -81,6 +81,14 @@
           "address": "NQ31 PBEF Q9DL BPTS P14P UCJ8 LN9Y HP6N PBLQ",
           "pub": "d4043aed0743e94870ea425129641111f5d2ba0d744c28fb4b5f165359ad10e2",
           "ts": 1789320788546
+        },
+        {
+          "device": "2aa11bcf35084ff323a1e7130112d51a0cb2e8238514db10cd70687a65dd91fe",
+          "name": "StarEyes",
+          "score": 280,
+          "address": "NQ52 42MJ LS57 5QNQ DKA5 2D5V K0AP 0FR7 8ANN",
+          "pub": "ede7761491efedf3aa04ad99416ac92598e4c302f890ef1248db0dacf0635588",
+          "ts": 1789323771681
         }
       ]
     },
