@@ -32,12 +32,12 @@ await page.waitForFunction(() => document.querySelectorAll('button').length > 10
 }).catch(() => console.log('!! hub buttons not ready in 45s'))
 await sleep(2500)
 
-// open NimRooftop = 7th game card (index 6)
+// open NimDash = 7th game card (index 6)
 const opened = await page.evaluate(() => {
   const plays = [...document.querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Play')
   if (plays.length < 7) return `only ${plays.length} Play buttons`
   plays[6].click()
-  return 'clicked NimRooftop'
+  return 'clicked NimDash'
 })
 console.log('→', opened)
 await sleep(1500)
@@ -45,7 +45,7 @@ await sleep(1500)
 const stageSel = '.gameview'
 await page.waitForSelector(stageSel, { timeout: 10000 })
 const readyText = await page.evaluate(() => document.body.textContent)
-console.log('ready overlay?', readyText.includes('TAP to jump'))
+console.log('ready overlay (TAP to jump)?', readyText.includes('TAP to jump'))
 
 async function stageShot(name) {
   const el = await page.$(stageSel)

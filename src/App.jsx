@@ -9,7 +9,7 @@ import {
   drawRushPreview,
   drawSwatPreview,
   drawSlicePreview,
-  drawRoofPreview,
+  drawDashPreview,
 } from './sketch'
 import chickUrl from './assets/chick.png'
 import { loadLB, bestScore, markVerified } from './leaderboard'
@@ -20,7 +20,7 @@ import NimBullseye from './games/NimBullseye'
 import NimRush from './games/NimRush'
 import NimSwat from './games/NimSwat'
 import NimSlice from './games/NimSlice'
-import NimRooftop from './games/NimRooftop'
+import NimDash from './games/NimDash'
 
 const GAMES = [
   {
@@ -66,11 +66,11 @@ const GAMES = [
     lbLabel: 'Slice',
   },
   {
-    id: 'run',
-    name: 'NimRooftop',
-    blurb: 'One button, endless rooftops. Jump the gaps, hop pigeons & AC units, grab Luna coins.',
-    how: 'tap to jump · hold = higher',
-    lbLabel: 'Rooftop',
+    id: 'dash',
+    name: 'NimDash',
+    blurb: 'Sprint, jump & mid-air FLAP over blocks, pits & mustachioed flies. Stomp flies, grab Luna coins.',
+    how: 'tap = jump · tap mid-air = flap',
+    lbLabel: 'Dash',
   },
 ]
 
@@ -100,7 +100,7 @@ function GameThumb({ kind, skin, dartSkin }) {
     else if (kind === 'bull') drawBoardPreview(ctx, 76, 76, dartSkin)
     else if (kind === 'rush') drawRushPreview(ctx, 76, 76, skin)
     else if (kind === 'swat') drawSwatPreview(ctx, 76, 76)
-    else if (kind === 'run') drawRoofPreview(ctx, 76, 76, skin)
+    else if (kind === 'dash') drawDashPreview(ctx, 76, 76, skin)
     else drawSlicePreview(ctx, 76, 76, skin)
   }, [kind, skin, dartSkin])
   return <canvas ref={ref} className="game-thumb" width={76} height={76} />
@@ -127,7 +127,7 @@ const CUP_NAMES = {
   rush: 'NimRush',
   swat: 'NimSwat',
   slice: 'NimSlice',
-  run: 'NimRooftop',
+  dash: 'NimDash',
 }
 
 /** Local, per-device record of Cup entries (for the profile's win history). */
@@ -732,7 +732,7 @@ export default function App() {
       rush: bestScore('rush'),
       swat: bestScore('swat'),
       slice: bestScore('slice'),
-      run: bestScore('run'),
+      dash: bestScore('dash'),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [view, lbTick]
@@ -807,10 +807,10 @@ export default function App() {
       </>
     )
   }
-  if (view === 'run') {
+  if (view === 'dash') {
     return (
       <>
-        <NimRooftop skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('run', id)} requestCup={(score) => cupSubmit('run', score)} />
+        <NimDash skin={chickSkin} {...gameProps} requestVerify={(id) => verifyScore('dash', id)} requestCup={(score) => cupSubmit('dash', score)} />
         {toast && <div className={`toast ${toast.err ? 'err' : ''}`}>{toast.msg}</div>}
       </>
     )
@@ -855,7 +855,7 @@ export default function App() {
             <div className="game-card" key={g.id}>
               <GameThumb
                 kind={g.id}
-                skin={g.id === 'chick' || g.id === 'rush' || g.id === 'slice' || g.id === 'run' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
+                skin={g.id === 'chick' || g.id === 'rush' || g.id === 'slice' || g.id === 'dash' ? chickSkin : g.id === 'stack' ? stackSkin : undefined}
                 dartSkin={dartSkin}
               />
               <div className="game-info">

@@ -178,12 +178,12 @@ check('NimSlice score recorded', sliceLb.length > 0)
 check('slice score is a multiple of 5', sliceLb.length > 0 && sliceLb[0].score % 5 === 0)
 await backToHub()
 
-// ---------- NimRooftop ----------
+// ---------- NimDash ----------
 // Fixed-seed course. A few real jumps (regression guard: input handlers must
 // not throw) — then the idle chick runs straight into gaps until the 3 hearts
 // drain → game over.
 await openGame(6)
-check('NimRooftop ready overlay', document.body.textContent.includes('TAP to jump'))
+check('NimDash ready overlay', document.body.textContent.includes('TAP to jump'))
 view = stage()
 const rDown = new window.Event('pointerdown', { bubbles: true })
 Object.defineProperty(rDown, 'clientX', { value: 180 })
@@ -200,16 +200,16 @@ for (let i = 0; i < 4; i++) {
   window.dispatchEvent(new window.Event('pointerup', { bubbles: true }))
   await sleep(650)
 }
-check('rooftop jumps run without runtime errors', failures === rFailsBefore)
+check('dash jumps/flaps run without runtime errors', failures === rFailsBefore)
 let runOver = false
 for (let i = 0; i < 45 && !runOver; i++) {
   await sleep(1000)
   runOver = document.body.textContent.includes('Play again')
 }
-check('NimRooftop ends when hearts run out', runOver)
-const runLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.run') || '[]')
-check('NimRooftop score recorded', runLb.length > 0)
-check('run score is a non-negative integer', runLb.length > 0 && Number.isInteger(runLb[0].score) && runLb[0].score >= 0)
+check('NimDash ends when hearts run out', runOver)
+const dashLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.dash') || '[]')
+check('NimDash score recorded', dashLb.length > 0)
+check('dash score is a non-negative integer', dashLb.length > 0 && Number.isInteger(dashLb[0].score) && dashLb[0].score >= 0)
 
 console.log(failures === 0 ? '\nGAMES TEST PASSED' : `\nGAMES TEST FAILED (${failures} checks)`)
 process.exit(failures === 0 ? 0 : 1)

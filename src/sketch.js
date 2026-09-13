@@ -781,61 +781,53 @@ export function drawSlicePreview(ctx, w, h, skin) {
   drawChicken(ctx, w * 0.16, h * 0.84, 0.62, skin, 0.6, 2, 0.05)
 }
 
-/** Rooftops + running chick + pigeon + Luna coin (NimRooftop thumbnail). */
-export function drawRoofPreview(ctx, w, h, skin) {
+/** Grass field + block + fly + Luna coin + running chick (NimDash thumbnail). */
+export function drawDashPreview(ctx, w, h, skin) {
   ctx.clearRect(0, 0, w, h)
   // sky
   const sky = ctx.createLinearGradient(0, 0, 0, h)
-  sky.addColorStop(0, '#7ec8f2')
+  sky.addColorStop(0, '#6ec6f0')
   sky.addColorStop(1, '#e8f7ff')
   ctx.fillStyle = sky
   ctx.fillRect(0, 0, w, h)
   drawSun(ctx, w * 0.82, h * 0.14, 8)
-  drawCloud(ctx, w * 0.2, h * 0.2, 0.45)
+  drawCloud(ctx, w * 0.22, h * 0.2, 0.42)
   // far skyline
   ctx.fillStyle = 'rgba(120,150,175,0.5)'
-  ctx.fillRect(0, h * 0.52, 22, h * 0.48)
-  ctx.fillRect(w * 0.58, h * 0.6, 18, h * 0.4)
-  // rooftops (with a gap between)
-  const roofs = [
-    { x: 0, y: h * 0.72, w: w * 0.44 },
-    { x: w * 0.56, y: h * 0.66, w: w * 0.44 },
-  ]
-  for (const r of roofs) {
-    ctx.fillStyle = '#795548'
-    ctx.fillRect(r.x, r.y, r.w, h - r.y)
-    ctx.fillStyle = '#4e342e'
-    ctx.fillRect(r.x - 2, r.y - 4, r.w + 4, 5)
-    ctx.fillStyle = 'rgba(255,236,179,0.55)'
-    for (let wx = r.x + 6; wx < r.x + r.w - 8; wx += 12) {
-      ctx.fillRect(wx, r.y + 10, 6, 8)
-      ctx.fillRect(wx, r.y + 26, 6, 8)
-    }
-  }
-  // AC unit on the second roof
-  ctx.fillStyle = '#94a3b8'
-  ctx.fillRect(w * 0.8, h * 0.66 - 10, 15, 10)
-  ctx.fillStyle = 'rgba(0,0,0,0.28)'
-  ctx.fillRect(w * 0.8 + 2, h * 0.66 - 7, 11, 1.6)
-  // pigeon over the gap
-  ctx.fillStyle = '#9aa5b1'
-  ctx.beginPath()
-  ctx.ellipse(w * 0.5, h * 0.56, 7, 5, 0, 0, Math.PI * 2)
+  ctx.fillRect(0, h * 0.5, 18, h * 0.5)
+  ctx.fillRect(w * 0.62, h * 0.58, 16, h * 0.42)
+  // ground
+  const gy = h * 0.78
+  ctx.fillStyle = '#7c4a21'
+  ctx.fillRect(0, gy, w, h - gy)
+  ctx.fillStyle = '#4caf50'
+  ctx.fillRect(0, gy, w, 5)
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'
+  ctx.fillRect(0, gy, w, 1.6)
+  // block obstacle
+  ctx.fillStyle = '#d99a2b'
+  rr(ctx, w * 0.66, gy - 20, 18, 20, 3)
   ctx.fill()
-  ctx.fillStyle = '#cbd5e1'
-  ctx.beginPath()
-  ctx.arc(w * 0.5 - 6, h * 0.56 - 3.5, 3.4, 0, Math.PI * 2)
-  ctx.fill()
-  // Luna coin
-  ctx.fillStyle = '#fbbf24'
-  ctx.beginPath()
-  ctx.arc(w * 0.5, h * 0.42, 6.5, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.strokeStyle = '#b45309'
-  ctx.lineWidth = 1.6
+  ctx.strokeStyle = 'rgba(120,70,10,0.55)'
+  ctx.lineWidth = 1.4
+  rr(ctx, w * 0.66 + 1.5, gy - 20 + 1.5, 15, 17, 2)
   ctx.stroke()
-  // running chick on the first roof
-  drawChicken(ctx, w * 0.22, h * 0.72 - 11, 0.66, skin, 0.8, 2, 0.08)
+  // mustachioed fly
+  drawFly(ctx, w * 0.45, h * 0.56, 0.9, 1.2, false)
+  // Luna coins (arc)
+  for (let i = 0; i < 3; i++) {
+    const cx = w * 0.24 + i * 11
+    const cy = h * 0.5 - Math.sin((i / 2) * Math.PI) * 8
+    ctx.fillStyle = '#fde68a'
+    ctx.beginPath()
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = '#d97706'
+    ctx.lineWidth = 1.2
+    ctx.stroke()
+  }
+  // running/mid-jump chick
+  drawChicken(ctx, w * 0.18, h * 0.68, 0.68, skin, 0.8, 3, -0.18)
 }
 
 /** Fly + swatter + BONK (NimSwat thumbnail). */
