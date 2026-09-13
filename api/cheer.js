@@ -14,7 +14,9 @@
 import { readJsonFile, writeJsonFile } from './lib/store.js'
 
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 ._\-]{0,15}$/
-const TX_RE = /^0x[0-9a-fA-F]{64}$/
+// The mini-app SDK returns the *serialized transaction* (hex string, variable
+// length — not a 64-char hash), so accept any hex/base64-looking identifier.
+const TX_RE = /^(0x)?[A-Za-z0-9+/=_-]{40,2048}$/
 const MAX_VALUE = 1_000_000_000_000 // 10,000,000 NIM — sanity cap
 const MAX_ENTRIES = 200
 
@@ -31,7 +33,10 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const data = await readJsonFile('data/cheers.json')
+      // ?fresh=1 bypasses the in-memory cache — used right after a cheer,
+      // since POST/GET may land on different serverless instances.
+      const fresh = req.query?.fresh === '1'
+      const data = await readJsonFile('data/cheers.json', { fresh })
       const cheers = [...(data.cheers || [])].sort((a, b) => b.ts - a.ts)
       return res.status(200).json({ ok: true, cheers })
     }

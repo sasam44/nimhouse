@@ -139,7 +139,8 @@ function CheerBoard({ tick }) {
       return
     }
     let alive = true
-    fetch('/api/cheer')
+    // fresh=1 after a cheer: bypass any stale per-instance cache
+    fetch(tick > 0 ? '/api/cheer?fresh=1' : '/api/cheer')
       .then((r) => r.json())
       .then((j) => {
         if (!alive) return
