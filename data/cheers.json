@@ -1,14 +1,4 @@
 {
   "version": 1,
-  "cheers": [
-    {
-      "id": "cmtzjg0suee57",
-      "name": "Sasam",
-      "message": "fix e2e — serialized tx",
-      "value": 1000,
-      "device": "",
-      "txHash": "0xb98f9b2700d181f32175351385165455a1ad4a633f940513a3b961e23f4efd75f78d2910848809940247b7771618dc0b167fb9f1182190bf4a285a9119884fa3045f5be399ce8cf564477d31c52af0d61aee4331b8ab410faf841ce9f92ed3c7b55c62fc9ca7481d11f42995cccb31da56c10d95efeb9e514c58090206817d7f3d0bea93756985efd6862c0cec7017f93a0ba470c8fe82c709c8338499f94686fccb45bdc2be3b0aebb5d972b0de9ac95f39b4f326e4ec403d8dc403ef2278546813fa30cc4d1fc2db2d56df556a3da74a3f729ce0e49fcb649e9fa16a31278829ae",
-      "ts": 1789287273000
-    }
-  ]
+  "cheers": []
 }
