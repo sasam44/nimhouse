@@ -83,6 +83,18 @@
           "ts": 1789320830106
         }
       ]
+    },
+    "dash": {
+      "P6903": [
+        {
+          "device": "a7ae604e327ecf5666b14a8e686577358605ab3ae6c944050771fc72175cce6d",
+          "name": "sasam",
+          "score": 300,
+          "address": "NQ31 PBEF Q9DL BPTS P14P UCJ8 LN9Y HP6N PBLQ",
+          "pub": "d4043aed0743e94870ea425129641111f5d2ba0d744c28fb4b5f165359ad10e2",
+          "ts": 1789320858994
+        }
+      ]
     }
   },
   "payouts": {
