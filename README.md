@@ -21,7 +21,9 @@ zero gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompe
   through Nimiq Pay. Skins *never* affect gameplay.
 - **Wallet-verified scores.** Verify any run by signing a tamper-proof record with your Nimiq wallet
   — the run earns a ✓ badge on the leaderboard.
-- **Cheer the house.** Tip other players with a NIM payment that carries your message on-chain.
+- **Cheer the house.** Tip with a NIM payment that carries your message on-chain. Every cheer
+  lands on a public cheer board (top cheers + latest words with their on-chain tx hash), backed by
+  the open, inspectable ledger `data/cheers.json` in this repo — transparency by design.
 - **NimHouse Cup.** Every 3 days, per game, the NimHouse wallet stakes 100 NIM (testnet). Top 3
   wallet-verified scores take 50 / 30 / 20 % of that cup's pool, paid on-chain at the end of the cup.
   Free to enter — one entry per device per game per cup, best score counts.
