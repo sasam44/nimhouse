@@ -975,13 +975,7 @@ export default function App() {
         )}
       </div>
 
-      <div className="footer">
-        <b>NimHouse</b> · built for the Nimiq Mini Apps Competition — Cycle II
-        <br />
-        Nimiq Pay Mini Apps Framework · NIM payments · wallet-verified scores
-        <br />
-        MIT License · open source · no entry fees · no gambling
-      </div>
+      <div className="footer">MADE BY SASAM</div>
 
       {menuOpen && (
         <MenuPanel
