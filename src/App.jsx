@@ -257,22 +257,30 @@ function CupCard({ tick }) {
 
   const pool = cup?.pool
   const walletReady = pool?.wallet && !/PENDING/.test(pool.wallet)
+  // Early-close awareness: pool.closeAt (public in the ledger) overrides the
+  // calendar period for display; submit is hard-blocked server-side.
+  const closeAt = Date.parse(pool?.closeAt || '')
+  let closeLabel = `closes ${cup?.period?.end ?? '…'} (${cup?.period?.daysLeft ?? '…'}d left)`
+  if (Number.isFinite(closeAt)) {
+    if (closeAt > Date.now())
+      closeLabel = `closes EARLY ${new Date(closeAt).toISOString().slice(0, 10)} (${Math.ceil(
+        (closeAt - Date.now()) / 3600000
+      )}h left) — payout follows`
+    else closeLabel = 'closed — payout in progress'
+  }
   return (
     <div className="card cup-card">
       <h3>
         🏆 NimHouse Cup — {cup?.period?.id || '…'}
-        {cup?.period && (
-          <span className="cup-period">
-            {' '}
-            · closes {cup.period.end} ({cup.period.daysLeft}d left)
-          </span>
-        )}
+        <span className="cup-period">{' '}</span>
+        <span className="cup-period">· {closeLabel}</span>
       </h3>
       <p className="cup-pool">
         {pool?.perGameDailyNim ?? 100} NIM per game per 3-day cup · top 3 take{' '}
         {pool?.splitPct?.join(' / ') ?? '50 / 30 / 20'}% · staked by the <b>NimHouse wallet</b>
         {walletReady && <span className="cup-wallet"> · {pool.wallet.slice(0, 6)}…{pool.wallet.slice(-4)}</span>}
       </p>
+      {pool?.note && <p className="cup-note">{pool.note}</p>}
       {cup ? (
         <div className="cup-board">
           {cup.games.map((g) => {
