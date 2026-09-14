@@ -24,7 +24,7 @@ zero gambling. Built for the [Nimiq Mini Apps Competition](https://miniappscompe
 - **Cheer the house.** Tip with a NIM payment that carries your message on-chain. Every cheer
   lands on a public cheer board (top cheers + latest words with their on-chain tx hash), backed by
   the open, inspectable ledger `data/cheers.json` in this repo — transparency by design.
-- **NimHouse Cup.** Every 3 days, per game, the NimHouse wallet stakes 100 NIM (testnet). Top 3
+- **NimHouse Cup.** Every 3 days, per game, the NimHouse wallet stakes 200 NIM (mainnet). Top 3
   wallet-verified scores take 50 / 30 / 20 % of that cup's pool, paid on-chain at the end of the cup.
   Free to enter — one entry per device per game per cup, best score counts.
 - **Demo mode.** Running outside Nimiq Pay (browser, CI) transparently simulates wallet actions so
@@ -49,7 +49,7 @@ the Cup API to match how Nimiq wallets hash signed messages).
 
 A free-to-enter, skill-only cup runs on a **3-day cycle**, independently per game.
 
-- **Stake.** At the start of every cup the NimHouse wallet stakes `100 NIM` (testnet) per game.
+- **Stake.** At the start of every cup the NimHouse wallet stakes `200 NIM` (mainnet) per game.
 - **Entry.** Finish any game → **Enter the NimHouse Cup**. The app signs a tamper-proof message
   (`game | period | score | device`) with your Nimiq wallet. The server re-verifies the ed25519
   signature before accepting the entry — a score you didn't sign with your own key is rejected.

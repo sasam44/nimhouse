@@ -48,7 +48,7 @@ const arg = (name, fallback) => {
   return i >= 0 ? argv[i + 1] : fallback
 }
 const DRY_RUN = argv.includes('--dry-run')
-const POOL_NIM = Number(arg('--pool', 100))
+const POOL_NIM = Number(arg('--pool', 200))
 const requestedPeriod = arg('--period', null)
 
 // ---- 3-day cup period math (must match api/cup.js) ----
