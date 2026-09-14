@@ -104,8 +104,9 @@ try {
 
 const current = periodInfo()
 const target = requestedPeriod ? { ...periodInfo(), p: Number(requestedPeriod.replace('P', '')), id: requestedPeriod } : { p: current.p - 1, id: `P${current.p - 1}` }
-if (target.p < 0 || (target.id !== current.id && target.p >= current.p)) {
-  console.error(`Period ${target.id} has not closed yet (current: ${current.id}, closes ${current.end}).`)
+const FORCE = process.argv.includes('--force')
+if (target.p < 0 || (!FORCE && target.id !== current.id && target.p >= current.p)) {
+  console.error(`Period ${target.id} has not closed yet (current: ${current.id}, closes ${current.end}). Use --force to pay an early-closed period.`)
   console.error('Payouts run after a period ends. Use --period Pxxxx for an already-closed period.')
   process.exit(1)
 }

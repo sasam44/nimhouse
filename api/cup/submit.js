@@ -37,6 +37,16 @@ export default async function handler(req, res) {
     if (!GAMES.includes(game)) return bad('unknown game')
     if (!/^P\d+$/.test(period || '')) return bad('bad period')
     if (period !== cupPeriod().id) return bad('cup period closed')
+    // Early-close override: pool.closeAt (announced publicly in the ledger).
+    // Once reached, no more entries for the current period — payout follows.
+    try {
+      const cupData = await readJsonFile('data/cup.json')
+      const closeAt = Date.parse(cupData.pool?.closeAt || '')
+      if (Number.isFinite(closeAt) && Date.now() >= closeAt)
+        return bad('this cup closed early — payout in progress, the next cup opens soon')
+    } catch {
+      /* no closeAt set */
+    }
     const s = Math.floor(Number(score))
     if (!Number.isFinite(s) || s < 0 || s > 1_000_000) return bad('bad score')
     if (!/^[0-9a-f]{64}$/i.test(device || '')) return bad('bad device id')
