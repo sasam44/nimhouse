@@ -45,6 +45,14 @@
           "address": "",
           "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
           "ts": 1789352675639
+        },
+        {
+          "device": "915bec8be0466ac23b30edd72ea87160f743886a8232dab5f7c73a89968ed569",
+          "name": "Dracula",
+          "score": 28,
+          "address": "NQ44 XGY3 JVJT U1X2 XHBS 6852 GMFG TB1M K6X5",
+          "pub": "6cc93817ea67d8da3386a157cf892da25124e3c861e4d191db09007fb2bd0890",
+          "ts": 1789359554966
         }
       ]
     },
