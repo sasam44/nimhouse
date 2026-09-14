@@ -280,7 +280,6 @@ function CupCard({ tick }) {
         {pool?.splitPct?.join(' / ') ?? '50 / 30 / 20'}% · staked by the <b>NimHouse wallet</b>
         {walletReady && <span className="cup-wallet"> · {pool.wallet.slice(0, 6)}…{pool.wallet.slice(-4)}</span>}
       </p>
-      {pool?.note && <p className="cup-note">{pool.note}</p>}
       {cup ? (
         <div className="cup-board">
           {cup.games.map((g) => {
