@@ -263,6 +263,14 @@
           "address": "NQ65 F65N HJ8J T937 9LVQ H3HB 89TY 0PJT NT93",
           "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
           "ts": 1789490213398
+        },
+        {
+          "device": "e7dc4759aa07d9ad1158e35d1e3670ac7d2311a3bdf7c341a6098bc49142b55f",
+          "name": "Paulghz",
+          "score": 26,
+          "address": "",
+          "pub": "5bfdf6b4ec931928842a21ac6a2312af56052c2ecb6a6bf7535175beb2a16708",
+          "ts": 1789492172652
         }
       ]
     },
