@@ -192,8 +192,8 @@ rl.on('close', () => {
   while (lineWaiters.length) lineWaiters.shift()(null)
 })
 const askLine = () => {
-  if (eof) return Promise.resolve(null)
   if (lineQueue.length) return Promise.resolve(lineQueue.shift())
+  if (eof) return Promise.resolve(null)
   return new Promise((res) => lineWaiters.push(res))
 }
 
