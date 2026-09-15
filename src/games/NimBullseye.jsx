@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { drawDart, drawSun, drawCloud, rr } from '../sketch'
+import { drawChicken, drawDart, drawSun, drawCloud, rr } from '../sketch'
+import { CHICK_SKINS } from '../skins'
 import { sfx } from '../sound'
 import { bestScore, submitScore } from '../leaderboard'
 import { getDeviceId } from '../wallet'
@@ -47,17 +48,26 @@ function dartHit(ox, oy) {
 }
 
 /**
- * Five levels of increasing difficulty. The crosshair sways around the home
- * point; from level 3 the board itself starts drifting (Lissajous motion).
- * Purely deterministic — same level always behaves the same.
+ * Five levels of increasing board speed: L1 steady, L2 slow drift,
+ * L3 moving, L4 fast drift, L5 chaos. Board motion is a fixed Lissajous
+ * per level; the chicken crossing runs on a fixed frame cycle (no RNG —
+ * competition rule: skill only, fully predictable). Crosshair sway is
+ * only a keyboard fallback (no pointer).
  */
 const LEVELS = [
-  { swayX: 58, swayY: 32, swaySp: 1.25, boardAx: 0, boardAy: 0, boardSp: 0, label: 'WARM-UP' },
-  { swayX: 68, swayY: 38, swaySp: 1.7, boardAx: 0, boardAy: 0, boardSp: 0, label: 'FAST SWAY' },
-  { swayX: 64, swayY: 36, swaySp: 1.55, boardAx: 46, boardAy: 20, boardSp: 0.55, label: 'MOVING BOARD' },
-  { swayX: 72, swayY: 42, swaySp: 2.0, boardAx: 66, boardAy: 32, boardSp: 0.8, label: 'WIBBLY BOARD' },
-  { swayX: 80, swayY: 46, swaySp: 2.45, boardAx: 78, boardAy: 40, boardSp: 1.05, label: 'CHAOS BOARD' },
+  { swayX: 58, swayY: 32, swaySp: 1.25, boardAx: 0, boardAy: 0, boardSp: 0, label: 'STEADY' },
+  { swayX: 62, swayY: 34, swaySp: 1.5, boardAx: 26, boardAy: 12, boardSp: 0.45, label: 'SLOW DRIFT' },
+  { swayX: 66, swayY: 36, swaySp: 1.7, boardAx: 44, boardAy: 20, boardSp: 0.7, label: 'MOVING' },
+  { swayX: 72, swayY: 40, swaySp: 2.0, boardAx: 64, boardAy: 32, boardSp: 0.95, label: 'FAST DRIFT' },
+  { swayX: 78, swayY: 44, swaySp: 2.3, boardAx: 82, boardAy: 44, boardSp: 1.25, label: 'CHAOS' },
 ]
+
+// Chicken crossing: from level 2, every CHICK_EVERY frames a chicken flies
+// across the board for CHICK_DUR frames (fixed path — deterministic).
+const CHICK_EVERY = 210
+const CHICK_DUR = 85
+const CHICK_HIT_R = 30 // collision radius around the chicken
+const CHICK_PENALTY = 10
 
 const QUOTES = [
   'Five boards, twenty-five darts. The wall is full of opinions.',
@@ -107,6 +117,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       pressWall: 0, // wall-clock ms when the current press started
       moved: 0, // accumulated aim movement during the current press
       lastP: null,
+      chick: null, // {x, y, dir} — deterministic crossing chicken
       fly: null,
       total: 0,
       float: null,
@@ -250,6 +261,24 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         st.power = 100 * (0.5 - 0.5 * Math.cos((st.t - st.chargeStart) * 5.2))
       }
 
+      // deterministic chicken crossing (fixed cycle — no RNG): from level 2,
+      // every CHICK_EVERY frames the chicken sweeps across for CHICK_DUR.
+      if (st.phase === 'playing' && st.level >= 1) {
+        const cycle = Math.floor(st.t / CHICK_EVERY)
+        const ph = st.t - cycle * CHICK_EVERY
+        if (ph < CHICK_DUR) {
+          const k = ph / CHICK_DUR
+          const dir = cycle % 2 === 0 ? 1 : -1
+          const x = dir === 1 ? -50 + (W + 100) * k : W + 50 - (W + 100) * k
+          const y = CY + Math.sin(cycle * 1.7) * 62
+          st.chick = { x, y, dir }
+        } else {
+          st.chick = null
+        }
+      } else {
+        st.chick = null
+      }
+
       if (st.fly) {
         st.fly.t += dt / 18
         if (st.fly.t >= 1) {
@@ -257,14 +286,21 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
           const y = st.fly.toY
           const hit = dartHit(st.fly.ox, st.fly.oy)
           const perfect = st.fly.perfect
-          const pts = perfect ? hit.pts * 2 : hit.pts
+          let pts = perfect ? hit.pts * 2 : hit.pts
+          let chickHit = false
+          // a crossing chicken at the landing spot deflates the dart
+          if (st.chick && Math.hypot(x - st.chick.x, y - st.chick.y) < CHICK_HIT_R) {
+            pts = Math.max(0, pts - CHICK_PENALTY)
+            chickHit = true
+            st.chick = null // knocked clear — next throw is unobstructed
+          }
           const tag = hit.name === 'BULL' || hit.name[0] === 'T' || hit.name[0] === 'D' ? hit.name : ''
           st.thrown.push({ ox: st.fly.ox, oy: st.fly.oy, pts, perfect })
           st.total += pts
           st.darts -= 1
-          st.float = { x, y, pts, perfect, tag, t: 0 }
+          st.float = { x, y, pts, perfect, tag, t: 0, chick: chickHit }
           st.fly = null
-          if (perfect && hit.pts > 0) sfx.win()
+          if (perfect && hit.pts > 0 && !chickHit) sfx.win()
           else sfx.thud()
           setScore(st.total)
           if (st.darts <= 0) {
@@ -418,6 +454,19 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       // pinned darts ride the board (stored as offsets from its center)
       for (const d of st.thrown) drawPinnedDart(ctx, b.x + d.ox, b.y + d.oy)
 
+      // crossing chicken (deterministic — see update loop)
+      if (st.chick) {
+        ctx.save()
+        ctx.fillStyle = 'rgba(20,30,50,0.22)'
+        ctx.beginPath()
+        ctx.ellipse(st.chick.x, st.chick.y + 14, 18, 5, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.translate(st.chick.x, st.chick.y)
+        if (st.chick.dir === -1) ctx.scale(-1, 1)
+        drawChicken(ctx, 0, 0, 0.85, CHICK_SKINS[0], st.t, st.t * 3)
+        ctx.restore()
+      }
+
       // flying dart
       if (st.fly) {
         const t = Math.min(st.fly.t, 1)
@@ -459,10 +508,11 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         ctx.lineWidth = 5
         ctx.lineJoin = 'round'
         ctx.strokeStyle = 'rgba(255,255,255,0.9)'
-        const label = f.pts === 0 ? 'MISS' : f.perfect ? `PERFECT +${f.pts}` : f.tag ? `${f.tag} +${f.pts}` : `+${f.pts}`
+        const base = f.pts === 0 ? 'MISS' : f.perfect ? `PERFECT +${f.pts}` : f.tag ? `${f.tag} +${f.pts}` : `+${f.pts}`
+        const label = f.chick ? `🐔 ${base}` : base
         const ly = f.y - 26 - f.t * 0.6
         ctx.strokeText(label, f.x, ly)
-        ctx.fillStyle = f.perfect ? '#ffd60a' : f.pts === 0 ? '#ff5d5d' : '#2b6cb0'
+        ctx.fillStyle = f.chick ? '#ff5d5d' : f.perfect ? '#ffd60a' : f.pts === 0 ? '#ff5d5d' : '#2b6cb0'
         ctx.fillText(label, f.x, ly)
         ctx.globalAlpha = 1
       }
@@ -628,13 +678,13 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
             <div className="panel">
               <h2>NimBullseye</h2>
               <p className="panel-sub">
-                A real dartboard: <b>BULL = 50</b>, triple ring = <b>T (3×)</b>, outer ring =
-                <b> D (2×)</b> — the rest is the segment number. <b>TAP to place the crosshair</b>{' '}
-                (the dart lands where it is, NOT where your finger is), <b>HOLD to charge</b>,{' '}
-                <b>RELEASE in the green band</b> = 2× points. From level 3 the board starts
-                moving — aim at where it will be when you release.
+                Real dartboard: <b>BULL = 50</b>, triple = <b>T (3×)</b>, outer ring = <b>D (2×)</b>.
+                <b> TAP to place the crosshair</b> (the dart lands where it is, not where your
+                finger is), <b>HOLD to charge</b>, <b>RELEASE in the green band</b> = 2×.
               </p>
-              <p className="panel-hint">One finger · TAP = aim · HOLD to charge · RELEASE in the green band</p>
+              <p className="panel-hint">
+                L2 the board drifts & a chicken crosses (🐔 land on it = −10) · L3–L5 faster & faster
+              </p>
             </div>
           </div>
         )}

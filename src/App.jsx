@@ -40,7 +40,7 @@ const GAMES = [
   {
     id: 'bull',
     name: 'NimBullseye',
-    blurb: 'Classic dartboard: BULL 50, triple T & double D rings. Tap to aim, hold to charge, release in the green band.',
+    blurb: 'Classic dartboard: BULL 50, T & D rings. A chicken crosses the board — land on it and −10.',
     how: 'tap aim · hold + release',
     lbLabel: 'Bullseye',
   },
