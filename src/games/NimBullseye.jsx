@@ -14,18 +14,37 @@ const DARTS_PER_LEVEL = 5
 const SWEET = 72 // ideal power (green band center)
 const SWEET_W = 6 // green band half-width
 const RETICLE_LIFT = 110 // touch: crosshair floats this far above the fingertip (finger occlusion)
+
+// Classic dartboard geometry (rings widened a bit so they are aimable by
+// touch): inner bull 50, outer bull 25, triple ring = 3×, double ring = 2×.
+const BULL_IN = 10
+const BULL_OUT = 22
+const TRIPLE_IN = 56
+const TRIPLE_OUT = 78
+const DOUBLE_IN = 96 // double ring runs DOUBLE_IN..R
+
+// Classic 20-segment layout, numbers clockwise from the top (20 at 12 o'clock)
+const SEGS = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5]
+const BLACK_SEGS = new Set([20, 4, 13, 15, 3, 7, 8, 14, 12, 5])
+
 const DART_SCALE = 1.15
 const TIP_LEN = 24 * DART_SCALE // tip offset inside drawDart local coords
 
-const RINGS = [
-  { r: 118, pts: 1, c: '#2f3542' },
-  { r: 96, pts: 3, c: '#ef476f' },
-  { r: 74, pts: 5, c: '#06d6a0' },
-  { r: 52, pts: 7, c: '#ef476f' },
-  { r: 30, pts: 10, c: '#06d6a0' },
-  { r: 16, pts: 25, c: '#f1faee' },
-  { r: 8, pts: 50, c: '#ffd60a' },
-]
+/** Score a dart landing at (ox, oy) relative to the board center.
+ *  20 segments × 18°; segment 20 is centered at the top (-90°). */
+function dartHit(ox, oy) {
+  const d = Math.hypot(ox, oy)
+  if (d <= BULL_IN) return { pts: 50, name: 'BULL' }
+  if (d <= BULL_OUT) return { pts: 25, name: '25' }
+  if (d > R) return { pts: 0, name: 'MISS' }
+  const a = (Math.atan2(oy, ox) * 180) / Math.PI
+  const rel = (((a + 99) % 360) + 360) % 360 // 0 at the 20 segment's leading edge
+  const idx = Math.floor(rel / 18) % 20
+  const num = SEGS[idx]
+  if (d >= TRIPLE_IN && d <= TRIPLE_OUT) return { pts: num * 3, name: 'T' + num }
+  if (d >= DOUBLE_IN) return { pts: num * 2, name: 'D' + num }
+  return { pts: num, name: String(num) }
+}
 
 /**
  * Five levels of increasing difficulty. The crosshair sways around the home
@@ -48,11 +67,7 @@ const QUOTES = [
   'The sway won that one. The drift won this one.',
 ]
 
-function ringPts(ox, oy) {
-  const d = Math.hypot(ox, oy)
-  for (const r of RINGS) if (d <= r.r) return r.pts
-  return 0
-}
+
 
 export default function NimBullseye({ skin, player, onExit, onScore, requestVerify, walletMode, requestCup }) {
   const canvasRef = useRef(null)
@@ -240,15 +255,16 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         if (st.fly.t >= 1) {
           const x = st.fly.toX
           const y = st.fly.toY
-          const basePts = ringPts(st.fly.ox, st.fly.oy)
+          const hit = dartHit(st.fly.ox, st.fly.oy)
           const perfect = st.fly.perfect
-          const pts = perfect ? basePts * 2 : basePts
+          const pts = perfect ? hit.pts * 2 : hit.pts
+          const tag = hit.name === 'BULL' || hit.name[0] === 'T' || hit.name[0] === 'D' ? hit.name : ''
           st.thrown.push({ ox: st.fly.ox, oy: st.fly.oy, pts, perfect })
           st.total += pts
           st.darts -= 1
-          st.float = { x, y, pts, perfect, t: 0 }
+          st.float = { x, y, pts, perfect, tag, t: 0 }
           st.fly = null
-          if (perfect && basePts > 0) sfx.win()
+          if (perfect && hit.pts > 0) sfx.win()
           else sfx.thud()
           setScore(st.total)
           if (st.darts <= 0) {
@@ -270,6 +286,14 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       draw(ctx, st)
     }
 
+    function wedge(ctx, cx, cy, a0, a1, r0, r1) {
+      ctx.beginPath()
+      ctx.arc(cx, cy, r1, a0, a1)
+      ctx.arc(cx, cy, r0, a1, a0, true)
+      ctx.closePath()
+      ctx.fill()
+    }
+
     function drawBoard(ctx, cx, cy) {
       // soft drop shadow
       const sh = ctx.createRadialGradient(cx, cy + 14, 30, cx, cy + 14, R + 40)
@@ -280,55 +304,85 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       ctx.ellipse(cx, cy + 16, R + 34, R + 26, 0, 0, Math.PI * 2)
       ctx.fill()
 
-      // wooden frame
+      // wooden surround (the numbers sit on it)
       const wood = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R)
-      wood.addColorStop(0, '#b06a2c')
-      wood.addColorStop(0.5, '#8d5524')
-      wood.addColorStop(1, '#6e3f16')
+      wood.addColorStop(0, '#e8d5a8')
+      wood.addColorStop(0.5, '#d9c08a')
+      wood.addColorStop(1, '#c2a468')
       ctx.fillStyle = wood
       ctx.beginPath()
-      ctx.arc(cx, cy, R + 11, 0, Math.PI * 2)
+      ctx.arc(cx, cy, R + 13, 0, Math.PI * 2)
       ctx.fill()
-      ctx.strokeStyle = 'rgba(50,25,5,0.6)'
+      ctx.strokeStyle = 'rgba(90,60,20,0.55)'
       ctx.lineWidth = 2.5
       ctx.stroke()
 
-      // rings
-      for (const r of RINGS) {
-        ctx.fillStyle = r.c
-        ctx.beginPath()
-        ctx.arc(cx, cy, r.r, 0, Math.PI * 2)
-        ctx.fill()
+      // 20 classic segments (18° each): cream/black singles, red/green triple & double
+      for (let i = 0; i < 20; i++) {
+        const a0 = ((-90 + i * 18 - 9) * Math.PI) / 180
+        const a1 = a0 + Math.PI / 10
+        const dark = BLACK_SEGS.has(SEGS[i])
+        ctx.fillStyle = dark ? '#23262e' : '#efe3c0'
+        wedge(ctx, cx, cy, a0, a1, BULL_OUT, TRIPLE_IN)
+        wedge(ctx, cx, cy, a0, a1, TRIPLE_OUT, DOUBLE_IN)
+        ctx.fillStyle = dark ? '#e63946' : '#2a9d8f'
+        wedge(ctx, cx, cy, a0, a1, TRIPLE_IN, TRIPLE_OUT)
+        wedge(ctx, cx, cy, a0, a1, DOUBLE_IN, R)
       }
-      // gold bullseye rim
-      ctx.strokeStyle = '#e8940a'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.arc(cx, cy, 8, 0, Math.PI * 2)
-      ctx.stroke()
 
-      // spokes
-      ctx.strokeStyle = 'rgba(14,22,38,0.4)'
-      ctx.lineWidth = 1.6
-      for (let i = 0; i < 8; i++) {
-        const a = (i * Math.PI) / 4
+      // bull (outer 25 red, inner 50 green — classic)
+      ctx.fillStyle = '#e63946'
+      ctx.beginPath()
+      ctx.arc(cx, cy, BULL_OUT, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#2a9d8f'
+      ctx.beginPath()
+      ctx.arc(cx, cy, BULL_IN, 0, Math.PI * 2)
+      ctx.fill()
+
+      // wires
+      ctx.strokeStyle = 'rgba(245,240,220,0.6)'
+      ctx.lineWidth = 1
+      for (const rr of [BULL_OUT, TRIPLE_IN, TRIPLE_OUT, DOUBLE_IN, R]) {
         ctx.beginPath()
-        ctx.moveTo(cx + Math.cos(a) * 9, cy + Math.sin(a) * 9)
-        ctx.lineTo(cx + Math.cos(a) * (R - 1), cy + Math.sin(a) * (R - 1))
+        ctx.arc(cx, cy, rr, 0, Math.PI * 2)
         ctx.stroke()
       }
+      for (let i = 0; i < 20; i++) {
+        const a = ((-99 + i * 18) * Math.PI) / 180
+        for (const [r0, r1] of [
+          [BULL_OUT, TRIPLE_IN],
+          [TRIPLE_OUT, DOUBLE_IN],
+        ]) {
+          ctx.beginPath()
+          ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0)
+          ctx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1)
+          ctx.stroke()
+        }
+      }
+
+      // segment numbers (classic layout, 20 at the top)
+      ctx.fillStyle = '#20242c'
+      ctx.font = '800 11px system-ui, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      for (let i = 0; i < 20; i++) {
+        const a = ((-90 + i * 18) * Math.PI) / 180
+        ctx.fillText(String(SEGS[i]), cx + Math.cos(a) * (R + 7), cy + Math.sin(a) * (R + 7))
+      }
+      ctx.textBaseline = 'alphabetic'
 
       // 3D dome: highlight top-left, shade bottom-right
       const hi = ctx.createRadialGradient(cx - 45, cy - 55, 8, cx - 20, cy - 20, R + 30)
-      hi.addColorStop(0, 'rgba(255,255,255,0.30)')
-      hi.addColorStop(0.5, 'rgba(255,255,255,0.06)')
+      hi.addColorStop(0, 'rgba(255,255,255,0.22)')
+      hi.addColorStop(0.5, 'rgba(255,255,255,0.05)')
       hi.addColorStop(1, 'rgba(255,255,255,0)')
       ctx.fillStyle = hi
       ctx.beginPath()
       ctx.arc(cx, cy, R, 0, Math.PI * 2)
       ctx.fill()
       const lo = ctx.createRadialGradient(cx + 50, cy + 60, 10, cx + 20, cy + 30, R + 20)
-      lo.addColorStop(0, 'rgba(0,0,20,0.28)')
+      lo.addColorStop(0, 'rgba(0,0,20,0.25)')
       lo.addColorStop(1, 'rgba(0,0,20,0)')
       ctx.fillStyle = lo
       ctx.beginPath()
@@ -405,7 +459,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         ctx.lineWidth = 5
         ctx.lineJoin = 'round'
         ctx.strokeStyle = 'rgba(255,255,255,0.9)'
-        const label = f.pts === 0 ? 'MISS' : f.perfect ? `PERFECT +${f.pts}` : `+${f.pts}`
+        const label = f.pts === 0 ? 'MISS' : f.perfect ? `PERFECT +${f.pts}` : f.tag ? `${f.tag} +${f.pts}` : `+${f.pts}`
         const ly = f.y - 26 - f.t * 0.6
         ctx.strokeText(label, f.x, ly)
         ctx.fillStyle = f.perfect ? '#ffd60a' : f.pts === 0 ? '#ff5d5d' : '#2b6cb0'
@@ -574,10 +628,11 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
             <div className="panel">
               <h2>NimBullseye</h2>
               <p className="panel-sub">
-                Five levels, five darts each. <b>TAP to place the crosshair</b> — the dart
-                lands exactly where it is. <b>HOLD to charge</b>, then <b>RELEASE in the green
-                band</b> for a PERFECT throw (2× points). Center bullseye = 50. From level 3
-                the board starts moving — aim at where it will be when you release.
+                A real dartboard: <b>BULL = 50</b>, triple ring = <b>T (3×)</b>, outer ring =
+                <b> D (2×)</b> — the rest is the segment number. <b>TAP to place the crosshair</b>{' '}
+                (the dart lands where it is, NOT where your finger is), <b>HOLD to charge</b>,{' '}
+                <b>RELEASE in the green band</b> = 2× points. From level 3 the board starts
+                moving — aim at where it will be when you release.
               </p>
               <p className="panel-hint">One finger · TAP = aim · HOLD to charge · RELEASE in the green band</p>
             </div>

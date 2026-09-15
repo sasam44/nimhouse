@@ -113,7 +113,7 @@ for (let i = 0; i < 34 && !bullOver; i++) {
 check('NimBullseye ends after 5 levels (25 darts)', bullOver)
 const bullLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.bull') || '[]')
 check('NimBullseye score recorded', bullLb.length > 0)
-check('bullseye score within possible range (0..2500)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 2500)
+check('bullseye score within possible range (0..3000)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 3000)
 
 // --- touch aim: the crosshair floats 110px (RETICLE_LIFT) above the fingertip.
 // Quick tap (<200ms) only PLACES the crosshair (no dart); hold + release
