@@ -7,29 +7,40 @@ import { readCup } from './lib/store.js'
 export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
 
 /**
- * 2-day cup periods. Every cup ends at 16:00 UTC (23:00 WIB) and is paid
- * right after (house policy). Grid anchored at P6904 = 2026-09-15T16:00Z.
- * P{n} covers [BASE + (n-6904)*48h, +48h).
+ * Cup grid. Every cup ends at 16:00 UTC (23:00 WIB) and is paid right after
+ * (house policy). P6904 (first cup after the P6903 early close) opens
+ * 2026-09-15T12:00Z and runs to the next 23:00 WIB anchor; every later cup
+ * is 48h on the 16:00 UTC anchor:
+ *   P6904      = [2026-09-15T12:00Z, 2026-09-17T16:00Z)
+ *   P{n>=6905} = [16:00Z + (n-6905)*48h, +48h)
  * The frontend uses the same function for the signed message, so client and
  * server always agree on the current period.
  */
 const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups
-const BASE_MS = Date.parse('2026-09-15T16:00:00.000Z') // P6904 start (23:00 WIB)
-const BASE_P = 6904
+const P6904_START = Date.parse('2026-09-15T12:00:00.000Z') // P6904 open (19:00 WIB)
+const P6904_END = Date.parse('2026-09-17T16:00:00.000Z') // P6904 close (23:00 WIB, 2 days)
+const BASE_MS = P6904_END // anchor for P6905 onward
+const BASE_P = 6905
 export function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
-  const p =
-    t < BASE_MS
-      ? BASE_P - 1 - Math.floor((BASE_MS - 1 - t) / PERIOD_MS)
-      : BASE_P + Math.floor((t - BASE_MS) / PERIOD_MS)
-  const start = new Date(BASE_MS + (p - BASE_P) * PERIOD_MS)
-  const end = new Date(start.getTime() + PERIOD_MS)
+  let p, start
+  if (t >= P6904_START && t < P6904_END) {
+    p = 6904
+    start = new Date(P6904_START)
+  } else if (t < P6904_START) {
+    p = 6904 - 1 - Math.floor((P6904_START - 1 - t) / PERIOD_MS)
+    start = new Date(P6904_START + (p - 6904) * PERIOD_MS)
+  } else {
+    p = BASE_P + Math.floor((t - BASE_MS) / PERIOD_MS)
+    start = new Date(BASE_MS + (p - BASE_P) * PERIOD_MS)
+  }
+  const end = new Date(start.getTime() + (p === 6904 ? P6904_END - P6904_START : PERIOD_MS))
   return {
     id: `P${p}`,
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
     closeWib: new Date(end.getTime() + 7 * 3600 * 1000).toISOString().slice(11, 16),
-    daysLeft: Math.max(1, Math.ceil((end - t) / 86400000)),
+    daysLeft: Math.max(1, Math.round((end - t) / 86400000)),
   }
 }
 
