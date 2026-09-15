@@ -40,8 +40,8 @@ const GAMES = [
   {
     id: 'bull',
     name: 'NimBullseye',
-    blurb: 'Five levels of swaying & moving boards. The dart lands exactly where you point it.',
-    how: 'aim · hold + release',
+    blurb: 'Tap to aim, hold to charge, release on the green band. Moving boards from level 3.',
+    how: 'tap aim · hold + release',
     lbLabel: 'Bullseye',
   },
   {

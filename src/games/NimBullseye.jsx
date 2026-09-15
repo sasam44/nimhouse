@@ -13,6 +13,7 @@ const R = 118
 const DARTS_PER_LEVEL = 5
 const SWEET = 72 // ideal power (green band center)
 const SWEET_W = 6 // green band half-width
+const RETICLE_LIFT = 110 // touch: crosshair floats this far above the fingertip (finger occlusion)
 const DART_SCALE = 1.15
 const TIP_LEN = 24 * DART_SCALE // tip offset inside drawDart local coords
 
@@ -87,7 +88,10 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       charging: false,
       chargeStart: 0,
       power: 0,
-      pointer: null, // {x, y} — finger/mouse aim (canvas coords)
+      pointer: null, // {x, y, touch} — raw input position (canvas coords)
+      pressWall: 0, // wall-clock ms when the current press started
+      moved: 0, // accumulated aim movement during the current press
+      lastP: null,
       fly: null,
       total: 0,
       float: null,
@@ -104,9 +108,14 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
     }
 
     function aimPos(t, lv) {
-      // The crosshair is your aim: it follows your finger/mouse. (Legacy
-      // sway is only a fallback for keyboard-only sessions with no pointer.)
-      if (st.pointer) return { x: st.pointer.x, y: st.pointer.y }
+      // The crosshair is your aim. For touch it floats RETICLE_LIFT px above
+      // the fingertip so it stays visible (a finger covers its own touch
+      // point); for mouse it sits exactly under the cursor. The legacy sway
+      // is only a fallback for pointer-less (keyboard) sessions.
+      if (st.pointer) {
+        const y = st.pointer.touch ? st.pointer.y - RETICLE_LIFT : st.pointer.y
+        return { x: st.pointer.x, y: Math.min(H - 4, Math.max(4, y)) }
+      }
       const L = LEVELS[lv]
       return {
         x: CX + Math.sin(t * L.swaySp) * L.swayX,
@@ -159,12 +168,18 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       if (st.phase === 'playing' && !st.fly && st.levelPause <= 0) {
         st.charging = true
         st.chargeStart = st.t
+        st.pressWall = performance.now()
+        st.moved = 0
       }
     }
 
     function release() {
       if (st.phase !== 'playing' || !st.charging || st.fly) return
+      const held = performance.now() - st.pressWall
       st.charging = false
+      // Quick tap (< 200 ms, barely moved) = aim only: it places the
+      // crosshair without throwing a dart.
+      if (held < 200 && st.moved < 12) return
       const p = 100 * (0.5 - 0.5 * Math.cos((st.t - st.chargeStart) * 5.2))
       st.power = p
       // No hidden drift: the dart lands exactly where the crosshair is.
@@ -490,19 +505,27 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
     function pointerXY(e) {
       const rect = canvas.getBoundingClientRect()
       if (!rect.width || !rect.height) return null
+      if (typeof e.clientX !== 'number' || typeof e.clientY !== 'number') return null
       const x = ((e.clientX - rect.left) / rect.width) * W
       const y = ((e.clientY - rect.top) / rect.height) * H
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return null
       return { x: Math.min(W - 4, Math.max(4, x)), y: Math.min(H - 4, Math.max(4, y)) }
     }
     const onPointerMove = (e) => {
       const p = pointerXY(e)
-      if (p) st.pointer = p
+      if (!p) return
+      if (st.lastP) st.moved += Math.hypot(p.x - st.lastP.x, p.y - st.lastP.y)
+      st.lastP = p
+      st.pointer = { x: p.x, y: p.y, touch: e.pointerType !== 'mouse' }
     }
     const onPointerDown = (e) => {
       if (e.target.closest && e.target.closest('button')) return
       e.preventDefault()
       const p = pointerXY(e)
-      if (p) st.pointer = p
+      if (p) {
+        st.lastP = p
+        st.pointer = { x: p.x, y: p.y, touch: e.pointerType !== 'mouse' }
+      }
       press()
     }
     const onPointerUp = () => release()
@@ -551,12 +574,12 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
             <div className="panel">
               <h2>NimBullseye</h2>
               <p className="panel-sub">
-                Five levels, five darts each. <b>Point where you want the dart to land</b> —
-                it goes exactly there. Hold to charge and release on the{' '}
-                <b style={{ color: 'var(--green)' }}>green band</b> for a PERFECT throw (2×
-                points). From level 3 the board starts moving — aim ahead of it.
+                Five levels, five darts each. <b>TAP to place the crosshair</b> — the dart
+                lands exactly where it is. <b>HOLD to charge</b>, then <b>RELEASE in the green
+                band</b> for a PERFECT throw (2× points). Center bullseye = 50. From level 3
+                the board starts moving — aim at where it will be when you release.
               </p>
-              <p className="panel-hint">AIM with finger or mouse · HOLD to charge · RELEASE in the green band</p>
+              <p className="panel-hint">One finger · TAP = aim · HOLD to charge · RELEASE in the green band</p>
             </div>
           </div>
         )}

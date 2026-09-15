@@ -114,6 +114,41 @@ check('NimBullseye ends after 5 levels (25 darts)', bullOver)
 const bullLb = JSON.parse(window.localStorage.getItem('nimhouse.lb.bull') || '[]')
 check('NimBullseye score recorded', bullLb.length > 0)
 check('bullseye score within possible range (0..2500)', bullLb.length > 0 && bullLb[0].score >= 0 && bullLb[0].score <= 2500)
+
+// --- touch aim: the crosshair floats 110px (RETICLE_LIFT) above the fingertip.
+// Quick tap (<200ms) only PLACES the crosshair (no dart); hold + release
+// throws to the reticle. Fake a canvas layout (jsdom has none) so pointer
+// coordinates map 1:1 onto the 360x600 stage.
+const bullCanvas = document.querySelector('canvas.game')
+bullCanvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 360, height: 600 })
+const againBtn = allButtons().find((x) => x.textContent.includes('Play again'))
+againBtn.dispatchEvent(new window.Event('click', { bubbles: true }))
+await sleep(300)
+view.dispatchEvent(new window.Event('pointerdown', { bubbles: true })) // start
+await sleep(400)
+function coordDown(x, y) {
+  const ev = new window.Event('pointerdown', { bubbles: true })
+  Object.defineProperty(ev, 'clientX', { value: x })
+  Object.defineProperty(ev, 'clientY', { value: y })
+  view.dispatchEvent(ev)
+}
+// Finger at (180, 342) → reticle at (180, 232) = board center (level 1 is static).
+coordDown(180, 342)
+await sleep(80)
+window.dispatchEvent(new window.Event('pointerup')) // < 200 ms → aim only, no dart
+await sleep(300)
+let coordOver = false
+for (let i = 0; i < 30 && !coordOver; i++) {
+  coordDown(180, 342)
+  await sleep(420 + (i % 4) * 90) // held ≥ 200 ms → real throw at the reticle
+  window.dispatchEvent(new window.Event('pointerup'))
+  await sleep(900) // flight + pin (+ level banner)
+  coordOver = document.body.textContent.includes('Play again')
+}
+check('touch-aim run completes (tap-aim + hold-throw)', coordOver)
+const bullLb2 = JSON.parse(window.localStorage.getItem('nimhouse.lb.bull') || '[]')
+// static levels 1–2: every dart lands on the board center → 50–100 pts each
+check('touch-aim run recorded a positive score (center hits)', bullLb2.length > 1 && bullLb2[0].score > 0)
 await backToHub()
 
 // ---------- NimRush ----------
