@@ -59,7 +59,7 @@
           "device": "58a51592496ae8349a32627f3a1d7df9e3b8ed0c77d8c0805ff14e097a91e689",
           "name": "Anonymous",
           "score": 61,
-          "address": "",
+          "address": "NQ73SE1XYRRFQ8NCDQCPHLJMNR858P7V2HPD",
           "pub": "ad4272a1f4302adc01af44cd4b97d75df19717239af2886dcbe7a1cc7182f629",
           "ts": 1789405670516
         }
@@ -95,7 +95,7 @@
           "device": "e7dc4759aa07d9ad1158e35d1e3670ac7d2311a3bdf7c341a6098bc49142b55f",
           "name": "Paulghz",
           "score": 23,
-          "address": "",
+          "address": "NQ52B1N0YTG5P1R7NSC7R25HER9GEYPDFFCX",
           "pub": "5bfdf6b4ec931928842a21ac6a2312af56052c2ecb6a6bf7535175beb2a16708",
           "ts": 1789466395084
         }
@@ -139,7 +139,7 @@
           "device": "e7dc4759aa07d9ad1158e35d1e3670ac7d2311a3bdf7c341a6098bc49142b55f",
           "name": "Paulghz",
           "score": 30,
-          "address": "",
+          "address": "NQ52B1N0YTG5P1R7NSC7R25HER9GEYPDFFCX",
           "pub": "5bfdf6b4ec931928842a21ac6a2312af56052c2ecb6a6bf7535175beb2a16708",
           "ts": 1789466136852
         }
@@ -167,7 +167,7 @@
           "device": "aefbc3d21a61ca80050164d9df2d9837686e423b1b6d508172358c9c2b1c1e1e",
           "name": "Anonymous",
           "score": 9,
-          "address": "",
+          "address": "NQ436G6HFE78TV0BYCM5TD84P7QX46XSSNM5",
           "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
           "ts": 1789352868966
         }
