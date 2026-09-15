@@ -215,14 +215,18 @@ function recordCupResult(game, periodId, score, rank) {
   }
 }
 
-/** 3-day cup periods (close at 23:00 WIB) — must stay in sync with api/cup.js */
-const PERIOD_MS = 3 * 86400 * 1000
-const PERIOD_OFFSET_MS = 16 * 3600 * 1000 // 16:00 UTC = 23:00 WIB
+/** 2-day cup periods (close at 23:00 WIB) — must stay in sync with api/cup.js */
+const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups
+const BASE_MS = Date.parse('2026-09-15T16:00:00.000Z') // P6904 start (23:00 WIB)
+const BASE_P = 6904
 function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
-  const p = Math.max(0, Math.floor((t - PERIOD_OFFSET_MS) / PERIOD_MS))
-  const start = new Date(p * PERIOD_MS + PERIOD_OFFSET_MS)
-  const end = new Date((p + 1) * PERIOD_MS + PERIOD_OFFSET_MS)
+  const p =
+    t < BASE_MS
+      ? BASE_P - 1 - Math.floor((BASE_MS - 1 - t) / PERIOD_MS)
+      : BASE_P + Math.floor((t - BASE_MS) / PERIOD_MS)
+  const start = new Date(BASE_MS + (p - BASE_P) * PERIOD_MS)
+  const end = new Date(start.getTime() + PERIOD_MS)
   return {
     id: `P${p}`,
     start: start.toISOString().slice(0, 10),

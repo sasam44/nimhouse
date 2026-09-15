@@ -35,7 +35,7 @@ const RAW = `https://raw.githubusercontent.com/${REPO}/main/data/cup.json`
 const API = 'https://nimhouse.vercel.app'
 const LUNA_PER_NIM = 100_000
 const SPLIT = [50, 30, 20]
-const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'hop']
+const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
 const NAMES = {
   chick: 'NimChick', stack: 'NimStack', bull: 'NimBullseye', rush: 'NimRush',
   swat: 'NimSwat', slice: 'NimSlice', hop: 'NimHop',
@@ -51,15 +51,20 @@ const DRY_RUN = argv.includes('--dry-run')
 const POOL_NIM = Number(arg('--pool', 200))
 const requestedPeriod = arg('--period', null)
 
-// ---- 3-day cup period math (must match api/cup.js) ----
-// Boundaries at 16:00 UTC (23:00 WIB) — house closes & pays at a fixed time.
-const PERIOD_MS = 3 * 86400 * 1000
-const PERIOD_OFFSET_MS = 16 * 3600 * 1000
+// ---- 2-day cup period math (must match api/cup.js) ----
+// Every cup ends at 16:00 UTC (23:00 WIB) and is paid right after.
+// Grid anchored at P6904 = 2026-09-15T16:00Z.
+const PERIOD_MS = 2 * 86400 * 1000
+const BASE_MS = Date.parse('2026-09-15T16:00:00.000Z')
+const BASE_P = 6904
 function periodInfo(date = new Date()) {
   const t = Date.parse(date)
-  const p = Math.max(0, Math.floor((t - PERIOD_OFFSET_MS) / PERIOD_MS))
-  const start = new Date(p * PERIOD_MS + PERIOD_OFFSET_MS)
-  const end = new Date((p + 1) * PERIOD_MS + PERIOD_OFFSET_MS)
+  const p =
+    t < BASE_MS
+      ? BASE_P - 1 - Math.floor((BASE_MS - 1 - t) / PERIOD_MS)
+      : BASE_P + Math.floor((t - BASE_MS) / PERIOD_MS)
+  const start = new Date(BASE_MS + (p - BASE_P) * PERIOD_MS)
+  const end = new Date(start.getTime() + PERIOD_MS)
   return { p, id: `P${p}`, start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) }
 }
 

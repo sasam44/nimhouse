@@ -7,19 +7,23 @@ import { readCup } from './lib/store.js'
 export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
 
 /**
- * 3-day cup periods. Boundaries at 16:00 UTC (23:00 WIB) so cups close and
- * get paid at a fixed, announced time (house policy).
- * P{n} covers [3n*86400s + 16h, (3n+3)*86400s + 16h).
+ * 2-day cup periods. Every cup ends at 16:00 UTC (23:00 WIB) and is paid
+ * right after (house policy). Grid anchored at P6904 = 2026-09-15T16:00Z.
+ * P{n} covers [BASE + (n-6904)*48h, +48h).
  * The frontend uses the same function for the signed message, so client and
  * server always agree on the current period.
  */
-const PERIOD_MS = 3 * 86400 * 1000
-const PERIOD_OFFSET_MS = 16 * 3600 * 1000 // 16:00 UTC = 23:00 WIB
+const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups
+const BASE_MS = Date.parse('2026-09-15T16:00:00.000Z') // P6904 start (23:00 WIB)
+const BASE_P = 6904
 export function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
-  const p = Math.max(0, Math.floor((t - PERIOD_OFFSET_MS) / PERIOD_MS))
-  const start = new Date(p * PERIOD_MS + PERIOD_OFFSET_MS)
-  const end = new Date((p + 1) * PERIOD_MS + PERIOD_OFFSET_MS)
+  const p =
+    t < BASE_MS
+      ? BASE_P - 1 - Math.floor((BASE_MS - 1 - t) / PERIOD_MS)
+      : BASE_P + Math.floor((t - BASE_MS) / PERIOD_MS)
+  const start = new Date(BASE_MS + (p - BASE_P) * PERIOD_MS)
+  const end = new Date(start.getTime() + PERIOD_MS)
   return {
     id: `P${p}`,
     start: start.toISOString().slice(0, 10),
