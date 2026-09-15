@@ -52,13 +52,14 @@ const POOL_NIM = Number(arg('--pool', 200))
 const requestedPeriod = arg('--period', null)
 
 // ---- 3-day cup period math (must match api/cup.js) ----
+// Boundaries at 16:00 UTC (23:00 WIB) — house closes & pays at a fixed time.
+const PERIOD_MS = 3 * 86400 * 1000
+const PERIOD_OFFSET_MS = 16 * 3600 * 1000
 function periodInfo(date = new Date()) {
-  const days = Math.floor(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000
-  )
-  const p = Math.floor(days / 3)
-  const start = new Date(p * 3 * 86400000)
-  const end = new Date((p + 1) * 3 * 86400000)
+  const t = Date.parse(date)
+  const p = Math.max(0, Math.floor((t - PERIOD_OFFSET_MS) / PERIOD_MS))
+  const start = new Date(p * PERIOD_MS + PERIOD_OFFSET_MS)
+  const end = new Date((p + 1) * PERIOD_MS + PERIOD_OFFSET_MS)
   return { p, id: `P${p}`, start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) }
 }
 

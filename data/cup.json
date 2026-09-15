@@ -9,8 +9,8 @@
     ],
     "wallet": "NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ",
     "stakeTx": "",
-    "note": "Free to play. Every 3-day cup the NimHouse wallet stakes 200 NIM (mainnet) per game. Top 3 scores in each game take 50 / 30 / 20 of that cup's pool, paid on-chain at the end of the cup. One entry per device per game per cup \u2014 your score is signed by your wallet. Payout schedule: P6903 closes early on 2026-09-15 00:00 UTC (07:00 WIB, announced 2026-09-14); its winners are paid at 200 NIM/game in MAINNET NIM right after close. P6904 opens 2026-09-16 00:00 UTC: 200 NIM/game, mainnet, paid at period end.",
-    "closeAt": "2026-09-15T00:00:00.000Z"
+    "note": "Free to play. Every 3-day cup the NimHouse wallet stakes 200 NIM (mainnet) per game. Top 3 scores in each game take 50 / 30 / 20 of that cup's pool, paid on-chain right after the cup closes. One entry per device per game per cup \u2014 your score is signed by your wallet. P6903 (first cup) closes early on 2026-09-15 23:00 WIB (16:00 UTC) and is paid in MAINNET NIM right after. From P6904 (opens 2026-09-16 23:00 WIB) every cup closes at 23:00 WIB on its end day and is paid right after.",
+    "closeAt": "2026-09-15T16:00:00.000Z"
   },
   "entries": {
     "chick": {
@@ -54,6 +54,14 @@
           "address": "NQ44 XGY3 JVJT U1X2 XHBS 6852 GMFG TB1M K6X5",
           "pub": "6cc93817ea67d8da3386a157cf892da25124e3c861e4d191db09007fb2bd0890",
           "ts": 1789359554966
+        },
+        {
+          "device": "58a51592496ae8349a32627f3a1d7df9e3b8ed0c77d8c0805ff14e097a91e689",
+          "name": "Anonymous",
+          "score": 61,
+          "address": "",
+          "pub": "ad4272a1f4302adc01af44cd4b97d75df19717239af2886dcbe7a1cc7182f629",
+          "ts": 1789405670516
         }
       ]
     },

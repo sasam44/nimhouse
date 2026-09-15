@@ -215,19 +215,20 @@ function recordCupResult(game, periodId, score, rank) {
   }
 }
 
-/** 3-day cup periods (UTC) — must stay in sync with api/cup.js */
+/** 3-day cup periods (close at 23:00 WIB) — must stay in sync with api/cup.js */
+const PERIOD_MS = 3 * 86400 * 1000
+const PERIOD_OFFSET_MS = 16 * 3600 * 1000 // 16:00 UTC = 23:00 WIB
 function cupPeriod(date = new Date()) {
-  const days = Math.floor(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000
-  )
-  const p = Math.floor(days / 3)
-  const start = new Date(p * 3 * 86400000)
-  const end = new Date((p + 1) * 3 * 86400000)
+  const t = Date.parse(date)
+  const p = Math.max(0, Math.floor((t - PERIOD_OFFSET_MS) / PERIOD_MS))
+  const start = new Date(p * PERIOD_MS + PERIOD_OFFSET_MS)
+  const end = new Date((p + 1) * PERIOD_MS + PERIOD_OFFSET_MS)
   return {
     id: `P${p}`,
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
-    daysLeft: Math.max(1, Math.ceil((end - date) / 86400000)),
+    closeWib: new Date(end.getTime() + 7 * 3600 * 1000).toISOString().slice(11, 16),
+    daysLeft: Math.max(1, Math.ceil((end - t) / 86400000)),
   }
 }
 
@@ -260,10 +261,10 @@ function CupCard({ tick }) {
   // Early-close awareness: pool.closeAt (public in the ledger) overrides the
   // calendar period for display; submit is hard-blocked server-side.
   const closeAt = Date.parse(pool?.closeAt || '')
-  let closeLabel = `closes ${cup?.period?.end ?? '…'} (${cup?.period?.daysLeft ?? '…'}d left)`
+  let closeLabel = `closes ${cup?.period?.end ?? '…'} · ${cup?.period?.closeWib ?? '23:00'} WIB (${cup?.period?.daysLeft ?? '…'}d left)`
   if (Number.isFinite(closeAt)) {
     if (closeAt > Date.now())
-      closeLabel = `closes EARLY ${new Date(closeAt).toISOString().slice(0, 10)} (${Math.ceil(
+      closeLabel = `closes EARLY ${new Date(closeAt + 7 * 3600 * 1000).toISOString().slice(0, 10)} (${Math.ceil(
         (closeAt - Date.now()) / 3600000
       )}h left) — payout follows`
     else closeLabel = 'closed — payout in progress'

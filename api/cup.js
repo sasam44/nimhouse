@@ -7,22 +7,25 @@ import { readCup } from './lib/store.js'
 export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
 
 /**
- * 3-day cup periods (UTC). P{n} covers days [3n, 3n+3) since the epoch.
+ * 3-day cup periods. Boundaries at 16:00 UTC (23:00 WIB) so cups close and
+ * get paid at a fixed, announced time (house policy).
+ * P{n} covers [3n*86400s + 16h, (3n+3)*86400s + 16h).
  * The frontend uses the same function for the signed message, so client and
  * server always agree on the current period.
  */
+const PERIOD_MS = 3 * 86400 * 1000
+const PERIOD_OFFSET_MS = 16 * 3600 * 1000 // 16:00 UTC = 23:00 WIB
 export function cupPeriod(date = new Date()) {
-  const days = Math.floor(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000
-  )
-  const p = Math.floor(days / 3)
-  const start = new Date(p * 3 * 86400000)
-  const end = new Date((p + 1) * 3 * 86400000)
+  const t = Date.parse(date)
+  const p = Math.max(0, Math.floor((t - PERIOD_OFFSET_MS) / PERIOD_MS))
+  const start = new Date(p * PERIOD_MS + PERIOD_OFFSET_MS)
+  const end = new Date((p + 1) * PERIOD_MS + PERIOD_OFFSET_MS)
   return {
     id: `P${p}`,
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
-    daysLeft: Math.max(1, Math.ceil((end - date) / 86400000)),
+    closeWib: new Date(end.getTime() + 7 * 3600 * 1000).toISOString().slice(11, 16),
+    daysLeft: Math.max(1, Math.ceil((end - t) / 86400000)),
   }
 }
 
