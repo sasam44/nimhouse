@@ -218,8 +218,8 @@ function recordCupResult(game, periodId, score, rank) {
 /** Cup grid (P6904: 2026-09-15T12:00Z → 2026-09-17T16:00Z; then 48h on the
  *  16:00 UTC anchor) — must stay in sync with api/cup.js */
 const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups
-const P6904_START = Date.parse('2026-09-15T12:00:00.000Z') // P6904 open (19:00 WIB)
-const P6904_END = Date.parse('2026-09-17T16:00:00.000Z') // P6904 close (23:00 WIB, 2 days)
+const P6904_START = Date.parse('2026-09-15T12:00:00.000Z') // P6904 open
+const P6904_END = Date.parse('2026-09-17T16:00:00.000Z') // P6904 close (2 days)
 const BASE_MS = P6904_END // anchor for P6905 onward
 const BASE_P = 6905
 function cupPeriod(date = new Date()) {
@@ -240,7 +240,7 @@ function cupPeriod(date = new Date()) {
     id: `P${p}`,
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
-    closeWib: new Date(end.getTime() + 7 * 3600 * 1000).toISOString().slice(11, 16),
+    closeUtc: end.toISOString().slice(11, 16),
     daysLeft: Math.max(1, Math.round((end - t) / 86400000)),
     startMs: start.getTime(),
     endMs: end.getTime(),
@@ -278,19 +278,19 @@ function CupCard({ tick }) {
   //     at the next cup's open time;
   //  2. an early close inside the current window (pool.closeAt before the
   //     grid end) → "closes EARLY";
-  //  3. normal countdown to the grid end (23:00 WIB).
+  //  3. normal countdown to the grid end (16:00 UTC).
   const closeAt = Date.parse(pool?.closeAt || '')
   const curClosed = !!(cup?.period && pool?.closedPeriods?.[cup.period.id])
-  const normalLabel = `closes ${cup?.period?.end ?? '…'} · ${cup?.period?.closeWib ?? '23:00'} WIB (${cup?.period?.daysLeft ?? '…'}d left)`
+  const normalLabel = `closes ${cup?.period?.end ?? '…'} · ${cup?.period?.closeUtc ?? '16:00'} UTC (${cup?.period?.daysLeft ?? '…'}d left)`
   let closeLabel = normalLabel
   if (curClosed && cup?.period?.endMs) {
-    const nextOpen = new Date(cup.period.endMs + 7 * 3600 * 1000)
-    closeLabel = `closed — paid on-chain ✓ · next cup opens ${nextOpen.toISOString().slice(0, 10)} · ${nextOpen.toISOString().slice(11, 16)} WIB`
+    const nextOpen = new Date(cup.period.endMs)
+    closeLabel = `closed — paid on-chain ✓ · next cup opens ${nextOpen.toISOString().slice(0, 10)} · ${nextOpen.toISOString().slice(11, 16)} UTC`
   } else if (Number.isFinite(closeAt)) {
     if (closeAt > Date.now() && closeAt < (cup?.period?.endMs ?? Infinity))
-      closeLabel = `closes EARLY ${new Date(closeAt + 7 * 3600 * 1000).toISOString().slice(0, 10)} · ${new Date(closeAt + 7 * 3600 * 1000)
+      closeLabel = `closes EARLY ${new Date(closeAt).toISOString().slice(0, 10)} · ${new Date(closeAt)
         .toISOString()
-        .slice(11, 16)} WIB (${Math.ceil((closeAt - Date.now()) / 3600000)}h left) — payout follows`
+        .slice(11, 16)} UTC (${Math.ceil((closeAt - Date.now()) / 3600000)}h left) — payout follows`
     else if (closeAt > Date.now()) closeLabel = normalLabel
     else closeLabel = 'closed — payout in progress'
   }

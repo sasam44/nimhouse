@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     //  1. pool.closedPeriods maps each closed cup to its close time — any
     //     submission to one of them is rejected (covers the gap between an
     //     early close and the next grid period, e.g. P6903 paid at 07:00
-    //     WIB while its grid window runs to 23:00 WIB).
+    //     UTC while its grid window runs to 16:00 UTC).
     //  2. pool.closeAt is the hard deadline of the next/current period.
     try {
       const cupData = await readJsonFile('data/cup.json')

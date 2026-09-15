@@ -9,7 +9,7 @@
     ],
     "wallet": "NQ52UUPVJEM5SBRAY98HS0FPYHCXHUQRH8CJ",
     "stakeTx": "8f52eb847a48a977c4d3ae2ce1cbafb72b63272efa7e94ba8457d0a5cba27da7",
-    "note": "Free to play. Every cup the NimHouse wallet (@nimhouse) stakes 300 NIM (mainnet) per game. Top 3 scores in each game take 50 / 30 / 20 of that cup's pool (150 / 90 / 60 NIM), paid on-chain right after the cup closes. One entry per device per game per cup \u2014 your score is signed by your wallet. Cups run 2 days and close at 23:00 WIB (16:00 UTC). House wallet: NQ52 UUPV JEM5 SBRA Y98H S0FP YHCX HUQR H8CJ (@nimhouse, handle verified on-chain). P6903 closed 2026-09-15 07:00 WIB \u2014 fully paid on-chain (1,280 NIM across the 7 games' top 3; 120 NIM unclaimed). P6904 opens 2026-09-15 19:00 WIB (12:00 UTC), closes 2026-09-17 23:00 WIB (16:00 UTC). P6905+ open and close 23:00 WIB, every 2 days.",
+    "note": "Free to play. Every cup the NimHouse wallet (@nimhouse) stakes 300 NIM (mainnet) per game. Top 3 scores in each game take 50 / 30 / 20 of that cup's pool (150 / 90 / 60 NIM), paid on-chain right after the cup closes. One entry per device per game per cup \u2014 your score is signed by your wallet. Cups run 2 days and close at 16:00 UTC (global times). House wallet: NQ52 UUPV JEM5 SBRA Y98H S0FP YHCX HUQR H8CJ (@nimhouse, handle verified on-chain). P6903 closed 2026-09-15 00:00 UTC \u2014 fully paid on-chain (1,280 NIM across the 7 games' top 3; 120 NIM unclaimed). P6904 opens 2026-09-15 12:00 UTC, closes 2026-09-17 16:00 UTC. P6905+ open and close 16:00 UTC, every 2 days.",
     "closeAt": "2026-09-17T16:00:00.000Z",
     "closedPeriods": {
       "P6903": "2026-09-15T00:00:00.000Z"
