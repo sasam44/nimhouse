@@ -30,6 +30,12 @@
       "pub": "5bfdf6b4ec931928842a21ac6a2312af56052c2ecb6a6bf7535175beb2a16708",
       "ts": 1789465962306,
       "changes": 0
+    },
+    "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d": {
+      "name": "nimiqlive",
+      "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
+      "ts": 1789485656644,
+      "changes": 0
     }
   }
 }
