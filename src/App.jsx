@@ -576,7 +576,26 @@ export default function App() {
   }
 
   useEffect(() => {
-    getWallet().then(setWallet)
+    getWallet().then((w) => {
+      setWallet(w)
+      // Restore a saved wallet connection (public address only) so users
+      // are not re-prompted for the wallet sheet on every reload.
+      if (w.mode === 'live') {
+        try {
+          const saved = JSON.parse(localStorage.getItem('nimhouse.wallet') || 'null')
+          if (saved && saved.addr) {
+            setAccounts(Array.isArray(saved.all) && saved.all.length ? saved.all : [saved.addr])
+            setConnected(true)
+            Promise.all([
+              w.nimiq.isConsensusEstablished().catch(() => null),
+              w.nimiq.getBlockNumber().catch(() => null),
+            ]).then(([consensus, block]) => {
+              if (block !== null) setChain({ consensus: consensus === true, block })
+            })
+          }
+        } catch { /* corrupt storage — ignore */ }
+      }
+    })
     // Pre-warm the pseudonymous device id (anti-spam identity) so the
     // Nimiq Pay permission prompt — if needed — happens once at session
     // start, not mid-cup after a game.
@@ -681,6 +700,14 @@ export default function App() {
       setChain({ consensus: consensus === true, block })
       setConnected(true)
       sfx.pop()
+      // Persist the connection (public address only) so reloads do NOT
+      // re-prompt the wallet sheet.
+      try {
+        localStorage.setItem(
+          'nimhouse.wallet',
+          JSON.stringify({ addr: accs[0], all: accs, at: Date.now() }),
+        )
+      } catch { /* private mode — fine */ }
     } catch (e) {
       setConnectErr(e?.error?.message || e?.message || 'Could not connect to the wallet')
     } finally {
@@ -705,6 +732,7 @@ export default function App() {
     setConnected(false)
     setAccounts(null)
     setChain(null)
+    try { localStorage.removeItem('nimhouse.wallet') } catch { /* ignore */ }
   }
 
   async function verifyScore(game, entryId) {
