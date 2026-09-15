@@ -233,6 +233,8 @@ function cupPeriod(date = new Date()) {
     end: end.toISOString().slice(0, 10),
     closeWib: new Date(end.getTime() + 7 * 3600 * 1000).toISOString().slice(11, 16),
     daysLeft: Math.max(1, Math.ceil((end - t) / 86400000)),
+    startMs: start.getTime(),
+    endMs: end.getTime(),
   }
 }
 
@@ -262,15 +264,25 @@ function CupCard({ tick }) {
 
   const pool = cup?.pool
   const walletReady = pool?.wallet && !/PENDING/.test(pool.wallet)
-  // Early-close awareness: pool.closeAt (public in the ledger) overrides the
-  // calendar period for display; submit is hard-blocked server-side.
+  // Close labels — states:
+  //  1. current grid cup already closed & paid (pool.closedPeriods) → point
+  //     at the next cup's open time;
+  //  2. an early close inside the current window (pool.closeAt before the
+  //     grid end) → "closes EARLY";
+  //  3. normal countdown to the grid end (23:00 WIB).
   const closeAt = Date.parse(pool?.closeAt || '')
-  let closeLabel = `closes ${cup?.period?.end ?? '…'} · ${cup?.period?.closeWib ?? '23:00'} WIB (${cup?.period?.daysLeft ?? '…'}d left)`
-  if (Number.isFinite(closeAt)) {
-    if (closeAt > Date.now())
-      closeLabel = `closes EARLY ${new Date(closeAt + 7 * 3600 * 1000).toISOString().slice(0, 10)} (${Math.ceil(
-        (closeAt - Date.now()) / 3600000
-      )}h left) — payout follows`
+  const curClosed = !!(cup?.period && pool?.closedPeriods?.[cup.period.id])
+  const normalLabel = `closes ${cup?.period?.end ?? '…'} · ${cup?.period?.closeWib ?? '23:00'} WIB (${cup?.period?.daysLeft ?? '…'}d left)`
+  let closeLabel = normalLabel
+  if (curClosed && cup?.period?.endMs) {
+    const nextOpen = new Date(cup.period.endMs + 7 * 3600 * 1000)
+    closeLabel = `closed — paid on-chain ✓ · next cup opens ${nextOpen.toISOString().slice(0, 10)} · ${nextOpen.toISOString().slice(11, 16)} WIB`
+  } else if (Number.isFinite(closeAt)) {
+    if (closeAt > Date.now() && closeAt < (cup?.period?.endMs ?? Infinity))
+      closeLabel = `closes EARLY ${new Date(closeAt + 7 * 3600 * 1000).toISOString().slice(0, 10)} · ${new Date(closeAt + 7 * 3600 * 1000)
+        .toISOString()
+        .slice(11, 16)} WIB (${Math.ceil((closeAt - Date.now()) / 3600000)}h left) — payout follows`
+    else if (closeAt > Date.now()) closeLabel = normalLabel
     else closeLabel = 'closed — payout in progress'
   }
   return (
@@ -281,7 +293,7 @@ function CupCard({ tick }) {
         <span className="cup-period">· {closeLabel}</span>
       </h3>
       <p className="cup-pool">
-        {pool?.perGameDailyNim ?? 100} NIM per game per 3-day cup · top 3 take{' '}
+        {pool?.perGameDailyNim ?? 100} NIM per game per 2-day cup · top 3 take{' '}
         {pool?.splitPct?.join(' / ') ?? '50 / 30 / 20'}% · staked by the <b>NimHouse wallet</b>
         {walletReady && <span className="cup-wallet"> · {pool.wallet.slice(0, 6)}…{pool.wallet.slice(-4)}</span>}
       </p>
@@ -315,7 +327,7 @@ function CupCard({ tick }) {
       )}
       <p className="cup-note">
         Free to play · no entry fee, no gambling. Finish any game → <b>Enter the NimHouse Cup</b>{' '}
-        (signs with your Nimiq wallet). One entry per device per game per 3-day cup — best score
+        (signs with your Nimiq wallet). One entry per device per game per 2-day cup — best score
         counts. Top 3 per game get paid on-chain at the end of each cup. Pool, entries &amp;
         payouts are public in the open-source repo.
       </p>

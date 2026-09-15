@@ -1,6 +1,6 @@
 /**
  * GET /api/cup — current NimHouse Cup state.
- * Returns the active 3-day period, pool config, per-game top-10, and payouts.
+ * Returns the active 2-day period, pool config, per-game top-10, and payouts.
  */
 import { readCup } from './lib/store.js'
 

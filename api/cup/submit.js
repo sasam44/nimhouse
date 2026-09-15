@@ -1,5 +1,5 @@
 /**
- * POST /api/cup/submit — enter the current 3-day Cup with a wallet-signed score.
+ * POST /api/cup/submit — enter the current 2-day Cup with a wallet-signed score.
  *
  * Body: { game, period, score, name, device, address, message, publicKey, signature }
  *
@@ -37,13 +37,19 @@ export default async function handler(req, res) {
     if (!GAMES.includes(game)) return bad('unknown game')
     if (!/^P\d+$/.test(period || '')) return bad('bad period')
     if (period !== cupPeriod().id) return bad('cup period closed')
-    // Early-close override: pool.closeAt (announced publicly in the ledger).
-    // Once reached, no more entries for the current period — payout follows.
+    // Close guards (announced publicly in the ledger):
+    //  1. pool.closedPeriods maps each closed cup to its close time — any
+    //     submission to one of them is rejected (covers the gap between an
+    //     early close and the next grid period, e.g. P6903 paid at 07:00
+    //     WIB while its grid window runs to 23:00 WIB).
+    //  2. pool.closeAt is the hard deadline of the next/current period.
     try {
       const cupData = await readJsonFile('data/cup.json')
+      if (cupData.pool?.closedPeriods?.[period])
+        return bad('this cup closed early — payout in progress, the next cup opens soon')
       const closeAt = Date.parse(cupData.pool?.closeAt || '')
       if (Number.isFinite(closeAt) && Date.now() >= closeAt)
-        return bad('this cup closed early — payout in progress, the next cup opens soon')
+        return bad('this cup is closed — payout in progress, the next cup opens soon')
     } catch {
       /* no closeAt set */
     }
