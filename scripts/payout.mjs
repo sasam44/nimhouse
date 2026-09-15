@@ -38,7 +38,7 @@ const SPLIT = [50, 30, 20]
 const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
 const NAMES = {
   chick: 'NimChick', stack: 'NimStack', bull: 'NimBullseye', rush: 'NimRush',
-  swat: 'NimSwat', slice: 'NimSlice', hop: 'NimHop',
+  swat: 'NimSwat', slice: 'NimSlice', dash: 'NimDash',
 }
 
 // ---- args ----
