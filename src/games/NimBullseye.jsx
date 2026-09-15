@@ -87,6 +87,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
       charging: false,
       chargeStart: 0,
       power: 0,
+      pointer: null, // {x, y} — finger/mouse aim (canvas coords)
       fly: null,
       total: 0,
       float: null,
@@ -103,6 +104,9 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
     }
 
     function aimPos(t, lv) {
+      // The crosshair is your aim: it follows your finger/mouse. (Legacy
+      // sway is only a fallback for keyboard-only sessions with no pointer.)
+      if (st.pointer) return { x: st.pointer.x, y: st.pointer.y }
       const L = LEVELS[lv]
       return {
         x: CX + Math.sin(t * L.swaySp) * L.swayX,
@@ -483,12 +487,26 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
 
     // ---------------- input ----------------
     const stage = stageRef.current
+    function pointerXY(e) {
+      const rect = canvas.getBoundingClientRect()
+      if (!rect.width || !rect.height) return null
+      const x = ((e.clientX - rect.left) / rect.width) * W
+      const y = ((e.clientY - rect.top) / rect.height) * H
+      return { x: Math.min(W - 4, Math.max(4, x)), y: Math.min(H - 4, Math.max(4, y)) }
+    }
+    const onPointerMove = (e) => {
+      const p = pointerXY(e)
+      if (p) st.pointer = p
+    }
     const onPointerDown = (e) => {
       if (e.target.closest && e.target.closest('button')) return
       e.preventDefault()
+      const p = pointerXY(e)
+      if (p) st.pointer = p
       press()
     }
     const onPointerUp = () => release()
+    stage.addEventListener('pointermove', onPointerMove)
     stage.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('pointerup', onPointerUp)
     const onKeyDown = (e) => {
@@ -509,6 +527,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
 
     return () => {
       cancelAnimationFrame(raf)
+      stage.removeEventListener('pointermove', onPointerMove)
       stage.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('pointerup', onPointerUp)
       window.removeEventListener('keydown', onKeyDown)
@@ -532,12 +551,12 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
             <div className="panel">
               <h2>NimBullseye</h2>
               <p className="panel-sub">
-                Five levels, five darts each. The dart lands exactly where your crosshair is —
-                ride the sway, release on your ring, and hit the{' '}
+                Five levels, five darts each. <b>Point where you want the dart to land</b> —
+                it goes exactly there. Hold to charge and release on the{' '}
                 <b style={{ color: 'var(--green)' }}>green band</b> for a PERFECT throw (2×
-                points). From level 3 the board starts moving…
+                points). From level 3 the board starts moving — aim ahead of it.
               </p>
-              <p className="panel-hint">HOLD to charge · RELEASE on your ring</p>
+              <p className="panel-hint">AIM with finger or mouse · HOLD to charge · RELEASE in the green band</p>
             </div>
           </div>
         )}

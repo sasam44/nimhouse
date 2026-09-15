@@ -78,22 +78,33 @@ export function getWallet() {
 /**
  * Pseudonymous device id: real per-origin id inside Nimiq Pay
  * (requestDeviceIdentifier), stable local id outside.
+ * Result is cached for the session: the native permission prompt shows at
+ * most ONCE (and never hangs — bounded wait, then local fallback).
  */
-export async function getDeviceId() {
-  if (window.nimiqPay && window.nimiqPay.requestDeviceIdentifier) {
-    try {
-      const id = await requestDeviceIdentifier({ reason: 'NimHouse leaderboard ranking and anti-spam' })
-      if (id) return id
-    } catch {
-      /* denied or failed — fall back below */
-    }
+let deviceIdPromise = null
+export function getDeviceId() {
+  if (!deviceIdPromise) {
+    deviceIdPromise = (async () => {
+      if (window.nimiqPay && window.nimiqPay.requestDeviceIdentifier) {
+        try {
+          const id = await Promise.race([
+            requestDeviceIdentifier({ reason: 'NimHouse leaderboard ranking and anti-spam' }),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('device-id timeout')), 8000)),
+          ])
+          if (id) return id
+        } catch {
+          /* denied or interrupted — fall back below */
+        }
+      }
+      let local = localStorage.getItem('nimhouse.device')
+      if (!local) {
+        local = 'dev-' + randomHex(8)
+        localStorage.setItem('nimhouse.device', local)
+      }
+      return local
+    })()
   }
-  let local = localStorage.getItem('nimhouse.device')
-  if (!local) {
-    local = 'dev-' + randomHex(8)
-    localStorage.setItem('nimhouse.device', local)
-  }
-  return local
+  return deviceIdPromise
 }
 
 export const fmtNim = (luna) =>

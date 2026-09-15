@@ -40,8 +40,8 @@ const GAMES = [
   {
     id: 'bull',
     name: 'NimBullseye',
-    blurb: 'Five levels of swaying & moving boards. The dart lands exactly where your crosshair is.',
-    how: 'hold + release',
+    blurb: 'Five levels of swaying & moving boards. The dart lands exactly where you point it.',
+    how: 'aim · hold + release',
     lbLabel: 'Bullseye',
   },
   {
@@ -577,6 +577,10 @@ export default function App() {
 
   useEffect(() => {
     getWallet().then(setWallet)
+    // Pre-warm the pseudonymous device id (anti-spam identity) so the
+    // Nimiq Pay permission prompt — if needed — happens once at session
+    // start, not mid-cup after a game.
+    getDeviceId().catch(() => {})
     return () => clearTimeout(toastTimer.current)
   }, [])
 
