@@ -145,6 +145,14 @@
           "address": "NQ52 42MJ LS57 5QNQ DKA5 2D5V K0AP 0FR7 8ANN",
           "pub": "ede7761491efedf3aa04ad99416ac92598e4c302f890ef1248db0dacf0635588",
           "ts": 1789476747365
+        },
+        {
+          "device": "aefbc3d21a61ca80050164d9df2d9837686e423b1b6d508172358c9c2b1c1e1e",
+          "name": "Anonymous",
+          "score": 5,
+          "address": "",
+          "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
+          "ts": 1789478767797
         }
       ]
     },
