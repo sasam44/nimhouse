@@ -5,13 +5,15 @@ import {
   drawChicken,
   drawDart,
   drawStackPreview,
-  drawBoardPreview,
-  drawRushPreview,
-  drawSwatPreview,
-  drawSlicePreview,
-  drawDashPreview,
 } from './sketch'
 import chickUrl from './assets/chick.png'
+import thumbChick from './assets/thumbs/chick.jpg'
+import thumbStack from './assets/thumbs/stack.jpg'
+import thumbBull from './assets/thumbs/bull.jpg'
+import thumbRush from './assets/thumbs/rush.jpg'
+import thumbSwat from './assets/thumbs/swat.jpg'
+import thumbSlice from './assets/thumbs/slice.jpg'
+import thumbDash from './assets/thumbs/dash.jpg'
 import { loadLB, bestScore, markVerified } from './leaderboard'
 import { sfx } from './sound'
 import NimChick from './games/NimChick'
@@ -88,22 +90,20 @@ function Logo() {
   )
 }
 
-function GameThumb({ kind, skin, dartSkin }) {
-  const ref = useRef(null)
-  useEffect(() => {
-    const c = ref.current
-    if (!c) return
-    const ctx = c.getContext('2d')
-    ctx.clearRect(0, 0, 76, 76)
-    if (kind === 'chick') drawChicken(ctx, 36, 46, 1.05, skin, 0.6, 0.9)
-    else if (kind === 'stack') drawStackPreview(ctx, skin?.hue ?? 158, 76, 76)
-    else if (kind === 'bull') drawBoardPreview(ctx, 76, 76, dartSkin)
-    else if (kind === 'rush') drawRushPreview(ctx, 76, 76, skin)
-    else if (kind === 'swat') drawSwatPreview(ctx, 76, 76)
-    else if (kind === 'dash') drawDashPreview(ctx, 76, 76, skin)
-    else drawSlicePreview(ctx, 76, 76, skin)
-  }, [kind, skin, dartSkin])
-  return <canvas ref={ref} className="game-thumb" width={76} height={76} />
+const GAME_THUMBS = {
+  chick: thumbChick,
+  stack: thumbStack,
+  bull: thumbBull,
+  rush: thumbRush,
+  swat: thumbSwat,
+  slice: thumbSlice,
+  dash: thumbDash,
+}
+
+function GameThumb({ kind }) {
+  const src = GAME_THUMBS[kind]
+  if (!src) return null
+  return <img className="game-thumb" src={src} alt="" draggable={false} loading="lazy" />
 }
 
 function SkinThumb({ group, skin }) {

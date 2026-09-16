@@ -379,6 +379,8 @@ input {
   flex: none;
   background: radial-gradient(circle at 50% 35%, #1c2c4a, #101a2c);
   border: 1px solid var(--line);
+  object-fit: cover;
+  display: block;
 }
 .game-info {
   flex: 1;
