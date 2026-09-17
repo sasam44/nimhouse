@@ -288,15 +288,16 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
           const perfect = st.fly.perfect
           let pts = perfect ? hit.pts * 2 : hit.pts
           let chickHit = false
-          // a crossing chicken at the landing spot deflates the dart
+          // dart lands on a crossing chicken: blocked (no points) and the
+          // total DROPS by CHICK_PENALTY
           if (st.chick && Math.hypot(x - st.chick.x, y - st.chick.y) < CHICK_HIT_R) {
-            pts = Math.max(0, pts - CHICK_PENALTY)
+            pts = -CHICK_PENALTY
             chickHit = true
             st.chick = null // knocked clear — next throw is unobstructed
           }
           const tag = hit.name === 'BULL' || hit.name[0] === 'T' || hit.name[0] === 'D' ? hit.name : ''
           st.thrown.push({ ox: st.fly.ox, oy: st.fly.oy, pts, perfect })
-          st.total += pts
+          st.total = Math.max(0, st.total + pts)
           st.darts -= 1
           st.float = { x, y, pts, perfect, tag, t: 0, chick: chickHit }
           st.fly = null
@@ -509,7 +510,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
         ctx.lineJoin = 'round'
         ctx.strokeStyle = 'rgba(255,255,255,0.9)'
         const base = f.pts === 0 ? 'MISS' : f.perfect ? `PERFECT +${f.pts}` : f.tag ? `${f.tag} +${f.pts}` : `+${f.pts}`
-        const label = f.chick ? `🐔 ${base}` : base
+        const label = f.chick ? `🐔 -${CHICK_PENALTY}` : base
         const ly = f.y - 26 - f.t * 0.6
         ctx.strokeText(label, f.x, ly)
         ctx.fillStyle = f.chick ? '#ff5d5d' : f.perfect ? '#ffd60a' : f.pts === 0 ? '#ff5d5d' : '#2b6cb0'
@@ -683,7 +684,7 @@ export default function NimBullseye({ skin, player, onExit, onScore, requestVeri
                 finger is), <b>HOLD to charge</b>, <b>RELEASE in the green band</b> = 2×.
               </p>
               <p className="panel-hint">
-                L2 the board drifts & a chicken crosses (🐔 land on it = −10) · L3–L5 faster & faster
+                L2 the board drifts & a chicken crosses (🐔 dart lands on it = −10, no points) · L3–L5 faster & faster
               </p>
             </div>
           </div>
