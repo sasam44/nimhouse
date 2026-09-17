@@ -126,6 +126,14 @@
           "address": "NQ31 PBEF Q9DL BPTS P14P UCJ8 LN9Y HP6N PBLQ",
           "pub": "d4043aed0743e94870ea425129641111f5d2ba0d744c28fb4b5f165359ad10e2",
           "ts": 1789665220106
+        },
+        {
+          "device": "aefbc3d21a61ca80050164d9df2d9837686e423b1b6d508172358c9c2b1c1e1e",
+          "name": "harefe",
+          "score": 71,
+          "address": "",
+          "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
+          "ts": 1789669861779
         }
       ]
     },
