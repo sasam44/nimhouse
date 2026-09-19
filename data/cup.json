@@ -793,6 +793,14 @@
           "address": "NQ52 B1N0 YTG5 P1R7 NSC7 R25H ER9G EYPD FFCX",
           "pub": "5bfdf6b4ec931928842a21ac6a2312af56052c2ecb6a6bf7535175beb2a16708",
           "ts": 1789837809693
+        },
+        {
+          "device": "aefbc3d21a61ca80050164d9df2d9837686e423b1b6d508172358c9c2b1c1e1e",
+          "name": "harefe",
+          "score": 1045,
+          "address": "",
+          "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
+          "ts": 1789840511009
         }
       ]
     },
