@@ -851,6 +851,14 @@
           "address": "",
           "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
           "ts": 1789847951004
+        },
+        {
+          "device": "2aa11bcf35084ff323a1e7130112d51a0cb2e8238514db10cd70687a65dd91fe",
+          "name": "StarEyes",
+          "score": 455,
+          "address": "",
+          "pub": "ede7761491efedf3aa04ad99416ac92598e4c302f890ef1248db0dacf0635588",
+          "ts": 1789848104855
         }
       ]
     },
