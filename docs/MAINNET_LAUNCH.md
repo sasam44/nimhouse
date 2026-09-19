@@ -24,7 +24,7 @@ Vercel issues the SSL cert automatically once DNS resolves. Verify:
   ~$0.0005, so **5,000 NIM ≈ a few thousand rupiah** and covers many cup periods
   (7 games × 100 NIM per 3-day period = 700 NIM/period).
 - Send to the NimHouse wallet (same address on both networks):
-  `NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ`
+  `NQ52UUPVJEM5SBRAY98HS0FPYHCXHUQRH8CJ`
 - Keep the funding tx hash — it becomes `stakeTx` in `data/cup.json` (public proof).
 
 ## 3. Point the Cup pool at mainnet (agent)

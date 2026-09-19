@@ -139,7 +139,7 @@ Then open it from Nimiq Pay with `https://nimpay.app/miniapps/open/<your-domain>
 
 `CHEER_ADDRESS` in [`src/wallet.js`](src/wallet.js) is the recipient for skin purchases, cheers, and
 Cup stakes. The live deployment uses the real NimHouse wallet:
-`NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ`.
+`NQ52UUPVJEM5SBRAY98HS0FPYHCXHUQRH8CJ`.
 
 > **Note:** Vercel serverless functions bake env vars in at deploy time — after changing
 > `CUP_ADMIN_SECRET` (or any `CUP_*` var) run a fresh `deploy --prod` for the running functions to

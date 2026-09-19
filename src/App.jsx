@@ -194,8 +194,9 @@ function CheerBoard({ tick }) {
         </div>
       ))}
       <p className="cup-note">
-        Every cheer is a real NIM payment to the NimHouse community wallet — the full public
-        ledger lives in the open-source repo; verify any entry by its on-chain tx hash.
+        Every cheer is a real NIM payment to the NimHouse community wallet
+        {' '}({CHEER_ADDRESS.slice(0, 6)}…{CHEER_ADDRESS.slice(-4)}) — the full public ledger lives in
+        the open-source repo; verify any entry by its on-chain tx hash.
       </p>
     </div>
   )

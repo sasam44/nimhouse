@@ -2,10 +2,10 @@ import { init, requestDeviceIdentifier } from '@nimiq/mini-app-sdk'
 
 /**
  * Recipient for in-app NIM payments (skin purchases + cheers).
- * Replace with your real Nimiq Pay address before submitting.
- * (In demo mode this address is only displayed/simulated.)
+ * House wallet: @nimhouse — NQ52 UUPV JEM5 SBRA Y98H S0FP YHCX HUQR H8CJ
+ * (same wallet that stakes & pays the cups; handle verified on-chain).
  */
-export const CHEER_ADDRESS = 'NQ31PBEFQ9DLBPTSP14PUCJ8LN9YHP6NPBLQ'
+export const CHEER_ADDRESS = 'NQ52UUPVJEM5SBRAY98HS0FPYHCXHUQRH8CJ'
 
 export const LUNA_PER_NIM = 100000
 
