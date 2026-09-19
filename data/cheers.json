@@ -45,6 +45,15 @@
       "device": "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d",
       "txHash": "c12e41bd5fdbf14dbeb2cca89fa2c8fa39d8b34ffd3935a8215428f6347bd8f6",
       "ts": 1789799281923
+    },
+    {
+      "id": "cmu83g2w97wvh",
+      "name": "Paulghz",
+      "message": "The bomb counts as miss?",
+      "value": 10000,
+      "device": "e7dc4759aa07d9ad1158e35d1e3670ac7d2311a3bdf7c341a6098bc49142b55f",
+      "txHash": "d607b3606181a3d4b7ca8f2069507e58d9ee04d73581aa2e98e72240b87456a3",
+      "ts": 1789804597689
     }
   ]
 }
