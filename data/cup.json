@@ -785,6 +785,14 @@
           "address": "NQ65 F65N HJ8J T937 9LVQ H3HB 89TY 0PJT NT93",
           "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
           "ts": 1789905868459
+        },
+        {
+          "device": "a7ae604e327ecf5666b14a8e686577358605ab3ae6c944050771fc72175cce6d",
+          "name": "sasam",
+          "score": 48,
+          "address": "NQ31 PBEF Q9DL BPTS P14P UCJ8 LN9Y HP6N PBLQ",
+          "pub": "d4043aed0743e94870ea425129641111f5d2ba0d744c28fb4b5f165359ad10e2",
+          "ts": 1789941982766
         }
       ]
     },
