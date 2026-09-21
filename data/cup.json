@@ -408,6 +408,14 @@
           "address": "",
           "pub": "ede7761491efedf3aa04ad99416ac92598e4c302f890ef1248db0dacf0635588",
           "ts": 1790015087956
+        },
+        {
+          "device": "aefbc3d21a61ca80050164d9df2d9837686e423b1b6d508172358c9c2b1c1e1e",
+          "name": "harefe",
+          "score": 11,
+          "address": "",
+          "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
+          "ts": 1790027063254
         }
       ]
     },
