@@ -81,6 +81,15 @@
       "device": "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d",
       "txHash": "f1f1c003b7d99c2c15f0613ffb08315ebb2bae8426ba4524f5fc5b701be8910e",
       "ts": 1789987397647
+    },
+    {
+      "id": "cmucp6av0bodg",
+      "name": "nimiqlive",
+      "message": "let’s go",
+      "value": 10000,
+      "device": "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d",
+      "txHash": "2fee7d40b1027b7b04213dabf70f4a8c6b3a399c29afca53d2bf5df66e557d8a",
+      "ts": 1790082956602
     }
   ]
 }
