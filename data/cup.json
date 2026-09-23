@@ -956,6 +956,14 @@
           "address": "",
           "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
           "ts": 1790111857553
+        },
+        {
+          "device": "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d",
+          "name": "nimiqlive",
+          "score": 100,
+          "address": "NQ65 F65N HJ8J T937 9LVQ H3HB 89TY 0PJT NT93",
+          "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
+          "ts": 1790172862337
         }
       ]
     },
