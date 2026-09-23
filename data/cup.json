@@ -816,6 +816,16 @@
           "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
           "ts": 1790085627267
         }
+      ],
+      "P6908": [
+        {
+          "device": "2aa11bcf35084ff323a1e7130112d51a0cb2e8238514db10cd70687a65dd91fe",
+          "name": "StarEyes",
+          "score": 1888,
+          "address": "",
+          "pub": "ede7761491efedf3aa04ad99416ac92598e4c302f890ef1248db0dacf0635588",
+          "ts": 1790194863664
+        }
       ]
     },
     "swat": {
