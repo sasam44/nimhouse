@@ -255,6 +255,14 @@
           "address": "NQ31 PBEF Q9DL BPTS P14P UCJ8 LN9Y HP6N PBLQ",
           "pub": "d4043aed0743e94870ea425129641111f5d2ba0d744c28fb4b5f165359ad10e2",
           "ts": 1790238954367
+        },
+        {
+          "device": "48f5c87114ebf709604b4dbdf11e8141c1805acc0006e7604dc0a0b31d71eca1",
+          "name": "anita",
+          "score": 17,
+          "address": "NQ44 Q640 9BPL BUSD X3QH 36C5 HKXS 9KHA E5BX",
+          "pub": "76ccc94ee29db27f27087a830fa1e037969be84b4046175cd4261c05b60abab8",
+          "ts": 1790239868981
         }
       ]
     },
