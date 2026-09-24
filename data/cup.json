@@ -1309,6 +1309,14 @@
           "address": "NQ44 Q640 9BPL BUSD X3QH 36C5 HKXS 9KHA E5BX",
           "pub": "76ccc94ee29db27f27087a830fa1e037969be84b4046175cd4261c05b60abab8",
           "ts": 1790239817384
+        },
+        {
+          "device": "aefbc3d21a61ca80050164d9df2d9837686e423b1b6d508172358c9c2b1c1e1e",
+          "name": "harefe",
+          "score": 2100,
+          "address": "",
+          "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
+          "ts": 1790242633924
         }
       ]
     },
