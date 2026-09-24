@@ -723,6 +723,14 @@
           "address": "",
           "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
           "ts": 1790263663657
+        },
+        {
+          "device": "e7dc4759aa07d9ad1158e35d1e3670ac7d2311a3bdf7c341a6098bc49142b55f",
+          "name": "Paulghz",
+          "score": 1233,
+          "address": "NQ52 B1N0 YTG5 P1R7 NSC7 R25H ER9G EYPD FFCX",
+          "pub": "5bfdf6b4ec931928842a21ac6a2312af56052c2ecb6a6bf7535175beb2a16708",
+          "ts": 1790282592924
         }
       ]
     },
