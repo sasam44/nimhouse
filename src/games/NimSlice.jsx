@@ -251,6 +251,7 @@ export default function NimSlice({ skin, player, onExit, onScore, requestVerify,
       puffs: [],
       pops: [],
       trail: null,
+      trailAt: 0,
       trailFx: [],
       combo: 0,
       banner: null,
@@ -288,6 +289,7 @@ export default function NimSlice({ skin, player, onExit, onScore, requestVerify,
 
     function finish(reason) {
       st.phase = 'over'
+      st.trail = null
       st.overReason = reason
       setPhase('over')
       const pool = reason === 'boom' ? QUOTES_BOOM : QUOTES_MISS
@@ -691,15 +693,29 @@ export default function NimSlice({ skin, player, onExit, onScore, requestVerify,
       st.combo = 0
       const p = toCanvas(e)
       st.trail = p
+      st.trailAt = performance.now()
       st.trailFx.push({ x: p.x, y: p.y, life: 16 })
     }
     const onPointerMove = (e) => {
       if (!st.trail) return
+      // mouse hover (no button pressed) must never slice
+      if (e.pointerType === 'mouse' && e.buttons === 0) return
       const p = toCanvas(e)
       const d = Math.hypot(p.x - st.trail.x, p.y - st.trail.y)
-      if (d < 2) return
+      const now = performance.now()
+      if (d < 4) {
+        // a parked finger jitters ~1-4px on touch devices — track it,
+        // but never treat it as a swipe
+        st.trail = p
+        st.trailAt = now
+        return
+      }
+      // only a real swipe (with speed) can slice: a finger held still can
+      // never trigger a bomb even if a sausage arcs through the touch point
+      const speed = (d / Math.max(1, now - st.trailAt)) * 16 // px per frame
+      st.trailAt = now
       // event-driven slice check (covers the whole swipe segment — no tunneling)
-      if (st.phase === 'play') {
+      if (st.phase === 'play' && speed >= 2) {
         const dirx = p.x - st.trail.x
         const diry = p.y - st.trail.y
         for (const s of st.sausages) {
@@ -715,8 +731,14 @@ export default function NimSlice({ skin, player, onExit, onScore, requestVerify,
     const onPointerUp = () => {
       st.trail = null
     }
+    const onPointerCancel = () => {
+      // OS can cancel a touch (gesture, call, webview focus loss) —
+      // never leave a stuck trail that slices on the next stray event
+      st.trail = null
+    }
     stage.addEventListener('pointerdown', onPointerDown)
     stage.addEventListener('pointermove', onPointerMove)
+    stage.addEventListener('pointercancel', onPointerCancel)
     window.addEventListener('pointerup', onPointerUp)
     const onKey = (e) => {
       if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat && st.phase === 'ready') {
