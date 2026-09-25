@@ -759,6 +759,16 @@
           "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
           "ts": 1790315599843
         }
+      ],
+      "P6909": [
+        {
+          "device": "aefbc3d21a61ca80050164d9df2d9837686e423b1b6d508172358c9c2b1c1e1e",
+          "name": "harefe",
+          "score": 1415,
+          "address": "",
+          "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
+          "ts": 1790372391275
+        }
       ]
     },
     "rush": {
