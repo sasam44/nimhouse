@@ -1,5 +1,5 @@
 /**
- * POST /api/cup/submit — enter the current 2-day Cup with a wallet-signed score.
+ * POST /api/cup/submit — enter the current Cup with a wallet-signed score.
  *
  * Body: { game, period, score, name, device, address, message, publicKey, signature }
  *
