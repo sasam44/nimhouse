@@ -525,6 +525,14 @@
           "address": "NQ52 B1N0 YTG5 P1R7 NSC7 R25H ER9G EYPD FFCX",
           "pub": "5bfdf6b4ec931928842a21ac6a2312af56052c2ecb6a6bf7535175beb2a16708",
           "ts": 1790282484247
+        },
+        {
+          "device": "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d",
+          "name": "nimiqlive",
+          "score": 44,
+          "address": "NQ65 F65N HJ8J T937 9LVQ H3HB 89TY 0PJT NT93",
+          "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
+          "ts": 1790314543591
         }
       ]
     },
