@@ -1,6 +1,6 @@
 /**
  * GET /api/cup — current NimHouse Cup state.
- * Returns the active 2-day period, pool config, per-game top-10, and payouts.
+ * Returns the active period, pool config, per-game top-10, and payouts.
  */
 import { readCup } from './lib/store.js'
 
@@ -9,32 +9,44 @@ export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
 /**
  * Cup grid. Every cup ends at 16:00 UTC and is paid right after (house
  * policy). P6904 (first cup after the P6903 early close) opens
- * 2026-09-15T12:00Z and runs to the next 16:00 UTC anchor; every later cup
- * is 48h on the 16:00 UTC anchor:
+ * 2026-09-15T12:00Z and runs to the next 16:00 UTC anchor; P6905–P6908 are
+ * 48h on the 16:00 UTC anchor; from P6909 (opened at the P6908 close,
+ * 2026-09-25T16:00Z) cups run 3 days (72h) on the same anchor:
  *   P6904      = [2026-09-15T12:00Z, 2026-09-17T16:00Z)
- *   P{n>=6905} = [16:00Z + (n-6905)*48h, +48h)
+ *   P6905–6908 = [16:00Z + (n-6905)*48h, +48h)
+ *   P{n>=6909} = [2026-09-25T16:00Z + (n-6909)*72h, +72h)
  * The frontend uses the same function for the signed message, so client and
  * server always agree on the current period.
  */
-const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups
+const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups (P6905–P6908)
+const PERIOD3_MS = 3 * 86400 * 1000 // 3-day cups (P6909 onward)
 const P6904_START = Date.parse('2026-09-15T12:00:00.000Z') // P6904 open
 const P6904_END = Date.parse('2026-09-17T16:00:00.000Z') // P6904 close (2 days)
 const BASE_MS = P6904_END // anchor for P6905 onward
 const BASE_P = 6905
+const P3_START = Date.parse('2026-09-25T16:00:00.000Z') // P6909 open (3-day era)
+const P3_BASE = 6909
 export function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
-  let p, start
-  if (t >= P6904_START && t < P6904_END) {
+  let p, start, dur
+  if (t >= P3_START) {
+    p = P3_BASE + Math.floor((t - P3_START) / PERIOD3_MS)
+    start = new Date(P3_START + (p - P3_BASE) * PERIOD3_MS)
+    dur = PERIOD3_MS
+  } else if (t >= P6904_START && t < P6904_END) {
     p = 6904
     start = new Date(P6904_START)
+    dur = P6904_END - P6904_START
   } else if (t < P6904_START) {
     p = 6904 - 1 - Math.floor((P6904_START - 1 - t) / PERIOD_MS)
     start = new Date(P6904_START + (p - 6904) * PERIOD_MS)
+    dur = PERIOD_MS
   } else {
     p = BASE_P + Math.floor((t - BASE_MS) / PERIOD_MS)
     start = new Date(BASE_MS + (p - BASE_P) * PERIOD_MS)
+    dur = PERIOD_MS
   }
-  const end = new Date(start.getTime() + (p === 6904 ? P6904_END - P6904_START : PERIOD_MS))
+  const end = new Date(start.getTime() + dur)
   return {
     id: `P${p}`,
     start: start.toISOString().slice(0, 10),
