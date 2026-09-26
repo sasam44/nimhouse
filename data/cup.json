@@ -570,6 +570,14 @@
           "address": "NQ31 PBEF Q9DL BPTS P14P UCJ8 LN9Y HP6N PBLQ",
           "pub": "d4043aed0743e94870ea425129641111f5d2ba0d744c28fb4b5f165359ad10e2",
           "ts": 1790423404480
+        },
+        {
+          "device": "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d",
+          "name": "nimiqlive",
+          "score": 45,
+          "address": "NQ65 F65N HJ8J T937 9LVQ H3HB 89TY 0PJT NT93",
+          "pub": "dcec88070bd032f0b1dc9d44013f79032b3a1a172d2d0753a4238225b2dfbb6c",
+          "ts": 1790425520528
         }
       ]
     },
