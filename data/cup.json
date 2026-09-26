@@ -1746,6 +1746,14 @@
           "address": "",
           "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
           "ts": 1790372266752
+        },
+        {
+          "device": "a7ae604e327ecf5666b14a8e686577358605ab3ae6c944050771fc72175cce6d",
+          "name": "sasam",
+          "score": 1295,
+          "address": "NQ31 PBEF Q9DL BPTS P14P UCJ8 LN9Y HP6N PBLQ",
+          "pub": "d4043aed0743e94870ea425129641111f5d2ba0d744c28fb4b5f165359ad10e2",
+          "ts": 1790423884909
         }
       ]
     }
