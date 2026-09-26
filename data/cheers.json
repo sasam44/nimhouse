@@ -90,6 +90,15 @@
       "device": "f3c345534a7d216d8b663a4d66828899594127495fdc117186fb30ec6872658d",
       "txHash": "2fee7d40b1027b7b04213dabf70f4a8c6b3a399c29afca53d2bf5df66e557d8a",
       "ts": 1790082956602
+    },
+    {
+      "id": "cmuic6gc01n8c",
+      "name": "sasam",
+      "message": "keep playing and get leaderboard",
+      "value": 10000,
+      "device": "a7ae604e327ecf5666b14a8e686577358605ab3ae6c944050771fc72175cce6d",
+      "txHash": "f39d73a711a9f6bfc826aa3d08612d261445196a38d3176fb383d1ce789f99c0",
+      "ts": 1790423928179
     }
   ]
 }
