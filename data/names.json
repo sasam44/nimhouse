@@ -48,6 +48,12 @@
       "pub": "5780dbd09a55144124de6d7cd1a0bbaccf4f5cae0926928ded3009c3bd8d6e0d",
       "ts": 1789488279870,
       "changes": 0
+    },
+    "08b52a84ec50c684ea6f293a7789d4e95573c99555adad0d8e08c23f21ff48cd": {
+      "name": "TesterOne",
+      "pub": "ce2c33d2ebeb7dd204bb4bb876dc8e25e854fd4744a15a2500f76f1dcaefc3c9",
+      "ts": 1790536352432,
+      "changes": 0
     }
   }
 }
