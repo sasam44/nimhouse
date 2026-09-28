@@ -52,6 +52,9 @@ A free-to-enter, skill-only cup runs on a **3-day cycle**, independently per gam
 
 - **Stake.** At the start of every cup the NimHouse wallet stakes `300 NIM` (mainnet) per game —
   `2,100 NIM` total per cup across the 7 games.
+  Special cup **P6910** (house funding schedule): extended window 28 Sept 16:00 UTC →
+  **4 Oct 23:59 WIB (16:59 UTC)**, stake raised to `500 NIM` per game — `3,500 NIM` total,
+  top 3 take 250 / 150 / 100 NIM per game.
 - **Entry.** Finish any game → **Enter the NimHouse Cup**. The app signs a tamper-proof message
   (`game | period | score | device`) with your Nimiq wallet. The server re-verifies the ed25519
   signature before accepting the entry — a score you didn't sign with your own key is rejected.
