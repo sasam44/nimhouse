@@ -218,7 +218,7 @@ function recordCupResult(game, periodId, score, rank) {
 
 /** Cup grid (P6904: 2026-09-15T12:00Z → 2026-09-17T16:00Z; P6905–P6908: 48h
  *  on the 16:00 UTC anchor; P6909+: 72h; P6910: extended special cup to
- *  2026-10-04T16:59Z) — must stay in sync with api/cup.js */
+ *  2026-10-05T16:59Z) — must stay in sync with api/cup.js */
 const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups (P6905–P6908)
 const PERIOD3_MS = 3 * 86400 * 1000 // 3-day cups (P6909 onward)
 const P6904_START = Date.parse('2026-09-15T12:00:00.000Z') // P6904 open
@@ -228,7 +228,7 @@ const BASE_P = 6905
 const P3_START = Date.parse('2026-09-25T16:00:00.000Z') // P6909 open (3-day era)
 const P3_BASE = 6909
 const P6910_START = Date.parse('2026-09-28T16:00:00.000Z')
-const P6910_END = Date.parse('2026-10-04T16:59:00.000Z') // 4 Oct 23:59 WIB — extended special cup
+const P6910_END = Date.parse('2026-10-05T16:59:00.000Z') // 5 Oct 23:59 WIB — extended special cup
 function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
   let p, start, dur
