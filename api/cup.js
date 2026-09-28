@@ -15,9 +15,9 @@ export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
  *   P6904      = [2026-09-15T12:00Z, 2026-09-17T16:00Z)
  *   P6905–6908 = [16:00Z + (n-6905)*48h, +48h)
  *   P6909      = [2026-09-25T16:00Z, 2026-09-28T16:00Z)
- *   P6910      = [2026-09-28T16:00Z, 2026-10-04T16:59Z)  extended special cup
+ *   P6910      = [2026-09-28T16:00Z, 2026-10-05T16:59Z)  extended special cup
  *                (stake 500 NIM/game, 3,500 NIM total; closes 23:59 WIB)
- *   P{n>=6911} = [2026-10-04T16:59Z + (n-6911)*72h, +72h)
+ *   P{n>=6911} = [2026-10-05T16:59Z + (n-6911)*72h, +72h)
  * The frontend uses the same function for the signed message, so client and
  * server always agree on the current period.
  */
@@ -30,7 +30,7 @@ const BASE_P = 6905
 const P3_START = Date.parse('2026-09-25T16:00:00.000Z') // P6909 open (3-day era)
 const P3_BASE = 6909
 const P6910_START = Date.parse('2026-09-28T16:00:00.000Z')
-const P6910_END = Date.parse('2026-10-04T16:59:00.000Z') // 4 Oct 23:59 WIB — extended special cup
+const P6910_END = Date.parse('2026-10-05T16:59:00.000Z') // 5 Oct 23:59 WIB — extended special cup
 export function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
   let p, start, dur
