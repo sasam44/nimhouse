@@ -217,8 +217,8 @@ function recordCupResult(game, periodId, score, rank) {
 }
 
 /** Cup grid (P6904: 2026-09-15T12:00Z → 2026-09-17T16:00Z; P6905–P6908: 48h
- *  on the 16:00 UTC anchor; P6909 onward: 72h on the same anchor) — must
- *  stay in sync with api/cup.js */
+ *  on the 16:00 UTC anchor; P6909+: 72h; P6910: extended special cup to
+ *  2026-10-04T16:59Z) — must stay in sync with api/cup.js */
 const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups (P6905–P6908)
 const PERIOD3_MS = 3 * 86400 * 1000 // 3-day cups (P6909 onward)
 const P6904_START = Date.parse('2026-09-15T12:00:00.000Z') // P6904 open
@@ -227,10 +227,20 @@ const BASE_MS = P6904_END // anchor for P6905 onward
 const BASE_P = 6905
 const P3_START = Date.parse('2026-09-25T16:00:00.000Z') // P6909 open (3-day era)
 const P3_BASE = 6909
+const P6910_START = Date.parse('2026-09-28T16:00:00.000Z')
+const P6910_END = Date.parse('2026-10-04T16:59:00.000Z') // 4 Oct 23:59 WIB — extended special cup
 function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
   let p, start, dur
-  if (t >= P3_START) {
+  if (t >= P6910_END) {
+    p = 6911 + Math.floor((t - P6910_END) / PERIOD3_MS)
+    start = new Date(P6910_END + (p - 6911) * PERIOD3_MS)
+    dur = PERIOD3_MS
+  } else if (t >= P6910_START) {
+    p = 6910
+    start = new Date(P6910_START)
+    dur = P6910_END - P6910_START
+  } else if (t >= P3_START) {
     p = P3_BASE + Math.floor((t - P3_START) / PERIOD3_MS)
     start = new Date(P3_START + (p - P3_BASE) * PERIOD3_MS)
     dur = PERIOD3_MS
@@ -314,7 +324,7 @@ function CupCard({ tick }) {
         <span className="cup-period">· {closeLabel}</span>
       </h3>
       <p className="cup-pool">
-        {pool?.perGameDailyNim ?? 100} NIM per game per 3-day cup · top 3 take{' '}
+        {pool?.perGameDailyNim ?? 100} NIM per game per cup · top 3 take{' '}
         {pool?.splitPct?.join(' / ') ?? '50 / 30 / 20'}% · staked by the <b>NimHouse wallet</b>
         {walletReady && <span className="cup-wallet"> · {pool.wallet.slice(0, 6)}…{pool.wallet.slice(-4)}</span>}
       </p>
@@ -348,7 +358,7 @@ function CupCard({ tick }) {
       )}
       <p className="cup-note">
         Free to play · no entry fee, no gambling. Finish any game → <b>Enter the NimHouse Cup</b>{' '}
-        (signs with your Nimiq wallet). One entry per device per game per 3-day cup — best score
+        (signs with your Nimiq wallet). One entry per device per game per cup — best score
         counts. Top 3 per game get paid on-chain at the end of each cup. Pool, entries &amp;
         payouts are public in the open-source repo.
       </p>
