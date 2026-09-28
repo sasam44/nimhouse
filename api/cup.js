@@ -14,7 +14,10 @@ export const GAMES = ['chick', 'stack', 'bull', 'rush', 'swat', 'slice', 'dash']
  * 2026-09-25T16:00Z) cups run 3 days (72h) on the same anchor:
  *   P6904      = [2026-09-15T12:00Z, 2026-09-17T16:00Z)
  *   P6905–6908 = [16:00Z + (n-6905)*48h, +48h)
- *   P{n>=6909} = [2026-09-25T16:00Z + (n-6909)*72h, +72h)
+ *   P6909      = [2026-09-25T16:00Z, 2026-09-28T16:00Z)
+ *   P6910      = [2026-09-28T16:00Z, 2026-10-04T16:59Z)  extended special cup
+ *                (stake 500 NIM/game, 3,500 NIM total; closes 23:59 WIB)
+ *   P{n>=6911} = [2026-10-04T16:59Z + (n-6911)*72h, +72h)
  * The frontend uses the same function for the signed message, so client and
  * server always agree on the current period.
  */
@@ -26,10 +29,20 @@ const BASE_MS = P6904_END // anchor for P6905 onward
 const BASE_P = 6905
 const P3_START = Date.parse('2026-09-25T16:00:00.000Z') // P6909 open (3-day era)
 const P3_BASE = 6909
+const P6910_START = Date.parse('2026-09-28T16:00:00.000Z')
+const P6910_END = Date.parse('2026-10-04T16:59:00.000Z') // 4 Oct 23:59 WIB — extended special cup
 export function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
   let p, start, dur
-  if (t >= P3_START) {
+  if (t >= P6910_END) {
+    p = 6911 + Math.floor((t - P6910_END) / PERIOD3_MS)
+    start = new Date(P6910_END + (p - 6911) * PERIOD3_MS)
+    dur = PERIOD3_MS
+  } else if (t >= P6910_START) {
+    p = 6910
+    start = new Date(P6910_START)
+    dur = P6910_END - P6910_START
+  } else if (t >= P3_START) {
     p = P3_BASE + Math.floor((t - P3_START) / PERIOD3_MS)
     start = new Date(P3_START + (p - P3_BASE) * PERIOD3_MS)
     dur = PERIOD3_MS
