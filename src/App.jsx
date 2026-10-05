@@ -218,9 +218,10 @@ function recordCupResult(game, periodId, score, rank) {
 
 /** Cup grid (P6904: 2026-09-15T12:00Z → 2026-09-17T16:00Z; P6905–P6908: 48h
  *  on the 16:00 UTC anchor; P6909+: 72h; P6910: extended special cup to
- *  2026-10-05T16:59Z) — must stay in sync with api/cup.js */
+ *  2026-10-05T16:59Z; P6911+: 120h) — must stay in sync with api/cup.js */
 const PERIOD_MS = 2 * 86400 * 1000 // 2-day cups (P6905–P6908)
-const PERIOD3_MS = 3 * 86400 * 1000 // 3-day cups (P6909 onward)
+const PERIOD3_MS = 3 * 86400 * 1000 // 3-day cups (P6909, P6910 base window)
+const PERIOD5_MS = 5 * 86400 * 1000 // 5-day cups (P6911 onward — house budget schedule)
 const P6904_START = Date.parse('2026-09-15T12:00:00.000Z') // P6904 open
 const P6904_END = Date.parse('2026-09-17T16:00:00.000Z') // P6904 close (2 days)
 const BASE_MS = P6904_END // anchor for P6905 onward
@@ -233,9 +234,9 @@ function cupPeriod(date = new Date()) {
   const t = Date.parse(date)
   let p, start, dur
   if (t >= P6910_END) {
-    p = 6911 + Math.floor((t - P6910_END) / PERIOD3_MS)
-    start = new Date(P6910_END + (p - 6911) * PERIOD3_MS)
-    dur = PERIOD3_MS
+    p = 6911 + Math.floor((t - P6910_END) / PERIOD5_MS)
+    start = new Date(P6910_END + (p - 6911) * PERIOD5_MS)
+    dur = PERIOD5_MS
   } else if (t >= P6910_START) {
     p = 6910
     start = new Date(P6910_START)
