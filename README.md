@@ -48,7 +48,8 @@ the Cup API to match how Nimiq wallets hash signed messages).
 
 ## NimHouse Cup (prize pool)
 
-A free-to-enter, skill-only cup runs on a **3-day cycle**, independently per game.
+A free-to-enter, skill-only cup runs on a **5-day cycle** (from cup P6911 — house budget
+schedule; earlier cups ran 2–3 days), independently per game.
 
 - **Stake.** At the start of every cup the NimHouse wallet stakes `300 NIM` (mainnet) per game —
   `2,100 NIM` total per cup across the 7 games.
