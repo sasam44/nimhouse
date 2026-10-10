@@ -306,7 +306,9 @@ function CupCard({ tick }) {
   const curClosed = !!(cup?.period && pool?.closedPeriods?.[cup.period.id])
   const normalLabel = `closes ${cup?.period?.end ?? '…'} · ${cup?.period?.closeUtc ?? '16:00'} UTC (${cup?.period?.daysLeft ?? '…'}d left)`
   let closeLabel = normalLabel
-  if (curClosed && cup?.period?.endMs) {
+  if (pool?.paused) {
+    closeLabel = 'cup PAUSED — P6911 paid on-chain ✓ · next cup will be announced by the house'
+  } else if (curClosed && cup?.period?.endMs) {
     const nextOpen = new Date(cup.period.endMs)
     closeLabel = `closed — paid on-chain ✓ · next cup opens ${nextOpen.toISOString().slice(0, 10)} · ${nextOpen.toISOString().slice(11, 16)} UTC`
   } else if (Number.isFinite(closeAt)) {
