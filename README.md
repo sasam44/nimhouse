@@ -66,6 +66,8 @@ schedule; earlier cups ran 2–3 days), independently per game.
   on-chain from the NimHouse wallet. Winners and payout tx hashes are public.
 - **Transparency.** Pool, entries, and payouts are stored in the open repo at
   [`data/cup.json`](data/cup.json). Anyone can audit every entry and payment.
+  The house may pause between cups (`pool.paused` in the ledger): while paused,
+  new cup entries are rejected server-side and the hub shows a PAUSED label.
 
 ### Cup API (Vercel serverless functions)
 
