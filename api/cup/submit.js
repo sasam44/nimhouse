@@ -47,6 +47,8 @@ export default async function handler(req, res) {
       const cupData = await readJsonFile('data/cup.json')
       if (cupData.pool?.closedPeriods?.[period])
         return bad('this cup closed early — payout in progress, the next cup opens soon')
+      if (cupData.pool?.paused)
+        return bad('the cup is PAUSED — the next cup will be announced by the house')
       const closeAt = Date.parse(cupData.pool?.closeAt || '')
       if (Number.isFinite(closeAt) && Date.now() >= closeAt)
         return bad('this cup is closed — payout in progress, the next cup opens soon')
